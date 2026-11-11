@@ -1,0 +1,2927 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Classement Cross - Gestion & Notation EPS</title>
+    <!-- Fonts sportives et modernes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,600;0,700;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Librairie SheetJS pour lire et exporter les fichiers Excel (.xlsx, .xls, .csv) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #26354d;
+            --bg-surface: #0b1120;
+            --track-orange: #ff5722;
+            --track-orange-light: #ff7043;
+            --forest-green: #10b981;
+            --forest-green-dark: #059669;
+            --gold: #fbbf24;
+            --silver: #94a3b8;
+            --bronze: #d97706;
+            --accent-blue: #3b82f6;
+            --accent-pink: #ec4899;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --shadow-sport: 0 10px 30px -5px rgba(0, 0, 0, 0.4);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-dark);
+            background-image:
+                radial-gradient(circle at 10% 15%, rgba(16, 185, 129, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 90% 85%, rgba(255, 87, 34, 0.12) 0%, transparent 40%),
+                repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.015) 0px, rgba(255, 255, 255, 0.015) 2px, transparent 2px, transparent 12px);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Bandeau décoratif style piste d'athlétisme */
+        .track-top-bar {
+            height: 8px;
+            width: 100%;
+            background: linear-gradient(90deg, var(--track-orange) 0%, var(--gold) 50%, var(--forest-green) 100%);
+            display: flex;
+        }
+
+        /* Header principal en Flexbox */
+        .app-header {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding: 20px 36px;
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand-box {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+        }
+
+        .brand-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--track-orange), #f97316);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 15px rgba(255, 87, 34, 0.4);
+            transform: skewX(-6deg);
+        }
+
+        .brand-title {
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 700;
+            font-style: italic;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, #ffffff, #cbd5e1);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+        }
+
+        .brand-subtitle {
+            font-size: 0.78rem;
+            color: var(--forest-green);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        /* Conteneur Principal en Flexbox */
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 1440px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 32px 24px;
+            gap: 28px;
+        }
+
+        /* Boutons Sportifs */
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px 22px;
+            border-radius: var(--radius-md);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 700;
+            font-size: 0.95rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.22s ease;
+            text-decoration: none;
+            color: var(--text-main);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--track-orange), #ea580c);
+            box-shadow: 0 6px 20px -3px rgba(255, 87, 34, 0.45);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -3px rgba(255, 87, 34, 0.65);
+        }
+
+        .btn-green {
+            background: linear-gradient(135deg, var(--forest-green), var(--forest-green-dark));
+            box-shadow: 0 6px 20px -3px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-green:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -3px rgba(16, 185, 129, 0.6);
+        }
+
+        .btn-outline {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            color: var(--text-main);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-sm {
+            padding: 8px 14px;
+            font-size: 0.82rem;
+            border-radius: var(--radius-sm);
+        }
+
+        /* Section Hero d'accueil */
+        .home-view {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 32px;
+            padding: 20px 0;
+        }
+
+        .hero-card {
+            width: 100%;
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.92), rgba(15, 23, 42, 0.96));
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 48px 36px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 24px;
+            box-shadow: var(--shadow-sport);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Lignes de couloirs d'athlétisme décoratives */
+        .hero-card::before {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: repeating-linear-gradient(90deg,
+                    var(--track-orange) 0px,
+                    var(--track-orange) 60px,
+                    #ffffff 60px,
+                    #ffffff 66px);
+            opacity: 0.7;
+        }
+
+        .hero-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            color: #34d399;
+            border-radius: 999px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .hero-title {
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: clamp(2.4rem, 5vw, 4rem);
+            font-weight: 700;
+            font-style: italic;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            line-height: 1.1;
+        }
+
+        .hero-title span {
+            color: var(--track-orange);
+        }
+
+        .hero-desc {
+            max-width: 680px;
+            color: var(--text-muted);
+            font-size: 1.05rem;
+            line-height: 1.6;
+        }
+
+        .import-zone {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            margin-top: 8px;
+            width: 100%;
+            max-width: 560px;
+        }
+
+        .btn-import-giant {
+            width: 100%;
+            padding: 20px 32px;
+            font-size: 1.15rem;
+            border-radius: 16px;
+            background: linear-gradient(135deg, var(--track-orange), #e11d48);
+            box-shadow: 0 12px 30px -6px rgba(255, 87, 34, 0.55);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            font-family: 'Chakra Petch', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.25s ease;
+        }
+
+        .btn-import-giant:hover {
+            transform: translateY(-3px) scale(1.01);
+            box-shadow: 0 18px 36px -6px rgba(255, 87, 34, 0.75);
+        }
+
+        /* Liste des fichiers importés (Boutons) */
+        .imported-files-section {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .section-subtitle {
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 1.25rem;
+            text-transform: uppercase;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .files-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .file-button-card {
+            flex: 1 1 320px;
+            background: var(--bg-card);
+            border: 2px solid rgba(16, 185, 129, 0.4);
+            border-radius: var(--radius-lg);
+            padding: 22px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            cursor: pointer;
+            transition: all 0.22s ease;
+            box-shadow: var(--shadow-sport);
+            color: var(--text-main);
+            text-align: left;
+        }
+
+        .file-button-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--forest-green);
+            transform: translateY(-4px);
+        }
+
+        .file-btn-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .file-bib-badge {
+            background: #ffffff;
+            color: #0f172a;
+            font-family: 'Chakra Petch', sans-serif;
+            font-weight: 700;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border-top: 4px solid var(--track-orange);
+            border-bottom: 4px solid var(--forest-green);
+            font-size: 1.1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .file-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .file-name-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #ffffff;
+        }
+
+        .file-meta {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .file-open-arrow {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.88rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .file-card-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #f87171;
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.28);
+            border-color: #ef4444;
+            color: #ffffff;
+            transform: translateY(-2px);
+        }
+
+        .status-badge-dnf {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            background: rgba(239, 68, 68, 0.18);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+        }
+
+        .status-badge-excused {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            background: rgba(148, 163, 184, 0.18);
+            color: #cbd5e1;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+        }
+
+        .status-select-inline {
+            appearance: auto;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.18s ease;
+        }
+
+        .status-select-dnf {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.5);
+        }
+
+        .status-select-excused {
+            background: rgba(16, 185, 129, 0.18);
+            color: #6ee7b7;
+            border: 1px solid rgba(16, 185, 129, 0.45);
+        }
+
+        .status-select-inline option {
+            background: #0f172a;
+            color: #f8fafc;
+        }
+
+        .btn-status-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            border: 1px solid rgba(16, 185, 129, 0.45);
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+        }
+
+        .btn-status-toggle:hover {
+            background: rgba(16, 185, 129, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .btn-status-toggle-dnf {
+            border-color: rgba(239, 68, 68, 0.45);
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+        }
+
+        .btn-status-toggle-dnf:hover {
+            background: rgba(239, 68, 68, 0.28);
+            color: #fff;
+        }
+
+        /* Barre des 5 boutons de navigation de la course */
+        .dashboard-view {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            width: 100%;
+        }
+
+        .race-banner {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-left: 6px solid var(--track-orange);
+            border-radius: var(--radius-lg);
+            padding: 20px 26px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .race-banner-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .race-banner-title {
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stats-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .stat-pill {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-color);
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 0.84rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Menu des 5 boutons en Flexbox */
+        .nav-buttons-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .nav-tab-btn {
+            flex: 1 1 210px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px 18px;
+            color: var(--text-main);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 700;
+            font-size: 0.94rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s ease;
+            text-align: left;
+        }
+
+        .nav-tab-btn:hover {
+            background: var(--bg-card-hover);
+            border-color: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .nav-tab-btn.active {
+            background: linear-gradient(135deg, var(--track-orange), #ea580c);
+            border-color: transparent;
+            box-shadow: 0 8px 20px -4px rgba(255, 87, 34, 0.5);
+        }
+
+        .nav-tab-num {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.14);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Chakra Petch', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        /* Panneaux de contenu */
+        .panel-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 26px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: var(--shadow-sport);
+        }
+
+        .panel-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .panel-title {
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .input-sport {
+            background: var(--bg-surface);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            color: var(--text-main);
+            padding: 10px 16px;
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .input-sport:focus {
+            border-color: var(--track-orange);
+        }
+
+        /* Tableaux de résultats */
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            background: var(--bg-surface);
+        }
+
+        table.sport-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.92rem;
+        }
+
+        table.sport-table thead tr {
+            background: linear-gradient(90deg, #1e3a8a, #2563eb);
+            color: #ffffff;
+            font-family: 'Chakra Petch', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            font-size: 0.85rem;
+        }
+
+        table.sport-table th,
+        table.sport-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            white-space: nowrap;
+        }
+
+        table.sport-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        /* Badges de rang et de dossard */
+        .rank-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+            height: 32px;
+            padding: 0 8px;
+            border-radius: 8px;
+            font-family: 'Chakra Petch', sans-serif;
+            font-weight: 700;
+            font-size: 0.95rem;
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+        }
+
+        .rank-1 {
+            background: linear-gradient(135deg, #fbbf24, #d97706);
+            color: #0f172a;
+            box-shadow: 0 0 12px rgba(251, 191, 36, 0.45);
+        }
+
+        .rank-2 {
+            background: linear-gradient(135deg, #e2e8f0, #94a3b8);
+            color: #0f172a;
+        }
+
+        .rank-3 {
+            background: linear-gradient(135deg, #f59e0b, #b45309);
+            color: #0f172a;
+        }
+
+        .dossard-tag {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8fafc;
+            color: #0f172a;
+            font-family: 'Chakra Petch', sans-serif;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 5px;
+            border-left: 3px solid var(--track-orange);
+            font-size: 0.85rem;
+        }
+
+        .sexe-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 0.78rem;
+        }
+
+        .sexe-m {
+            background: rgba(59, 130, 246, 0.18);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.35);
+        }
+
+        .sexe-f {
+            background: rgba(236, 72, 153, 0.18);
+            color: #f472b6;
+            border: 1px solid rgba(236, 72, 153, 0.35);
+        }
+
+        .classe-tag {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.82rem;
+        }
+
+        /* Vue 2 : Deux tableaux Filles / Garçons en Flexbox */
+        .split-tables-flex {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            width: 100%;
+        }
+
+        .split-column {
+            flex: 1 1 520px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            min-width: 0;
+        }
+
+        .column-banner {
+            padding: 14px 20px;
+            border-radius: var(--radius-md);
+            font-family: 'Chakra Petch', sans-serif;
+            font-weight: 700;
+            font-size: 1.15rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .banner-boys {
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.25), rgba(30, 41, 59, 0.8));
+            border-left: 5px solid var(--accent-blue);
+        }
+
+        .banner-girls {
+            background: linear-gradient(90deg, rgba(236, 72, 153, 0.25), rgba(30, 41, 59, 0.8));
+            border-left: 5px solid var(--accent-pink);
+        }
+
+        /* Vue 3 : Résultats par classe en Flexbox */
+        .classes-cards-container {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .class-group-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .class-group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        /* Vue 4 : Podium & Algorithme Classement des classes */
+        .podium-flex {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin: 12px 0 24px;
+        }
+
+        .podium-step {
+            flex: 1 1 220px;
+            max-width: 280px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 22px 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 10px;
+            position: relative;
+        }
+
+        .podium-1 {
+            border-top: 5px solid var(--gold);
+            transform: translateY(-10px);
+            background: linear-gradient(180deg, rgba(251, 191, 36, 0.12), var(--bg-surface));
+        }
+
+        .podium-2 {
+            border-top: 5px solid var(--silver);
+            background: linear-gradient(180deg, rgba(148, 163, 184, 0.12), var(--bg-surface));
+        }
+
+        .podium-3 {
+            border-top: 5px solid var(--bronze);
+            background: linear-gradient(180deg, rgba(217, 119, 6, 0.12), var(--bg-surface));
+        }
+
+        .bareme-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            background: var(--bg-surface);
+            padding: 16px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+        }
+
+        .bareme-chip {
+            flex: 1 1 140px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            align-items: center;
+            text-align: center;
+        }
+
+        .bareme-rank {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .bareme-pts {
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--gold);
+        }
+
+        /* Vue 5 : Création des notes VMA */
+        .science-box {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(59, 130, 246, 0.1));
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .science-title {
+            font-family: 'Chakra Petch', sans-serif;
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: #34d399;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .note-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-family: 'Chakra Petch', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .note-excellent {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.45);
+        }
+
+        .note-good {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.45);
+        }
+
+        .note-medium {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.45);
+        }
+
+        .vma-input-inline {
+            width: 78px;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 5px 8px;
+            border-radius: 6px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Footer */
+        .app-footer {
+            padding: 20px 36px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="track-top-bar"></div>
+
+    <!-- HEADER -->
+    <header class="app-header">
+        <div class="brand-box" onclick="showHomePage()">
+            <div class="brand-icon">🏃</div>
+            <div>
+                <div class="brand-title">Classement Cross</div>
+                <div class="brand-subtitle">EPS Collège • Chronométrage & Notation VMA</div>
+            </div>
+        </div>
+
+        <div class="header-actions">
+            <button class="btn btn-outline btn-sm" onclick="downloadSampleCrossExcel()"
+                title="Télécharger un fichier Excel de démonstration conforme au modèle">
+                📥 Exemple Excel Cross
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="downloadSampleVmaExcel()"
+                title="Télécharger le fichier Excel des VMA correspondant aux élèves">
+                📥 Exemple Excel VMA
+            </button>
+            <button class="btn btn-primary btn-sm" id="backHomeBtn" onclick="showHomePage()" style="display: none;">
+                🏠 Retour à l'accueil
+            </button>
+        </div>
+    </header>
+
+    <!-- CONTENEUR PRINCIPAL -->
+    <main class="main-container">
+
+        <!-- ================= PAGE D'ACCUEIL ================= -->
+        <section id="homeView" class="home-view">
+            <div class="hero-card">
+                <div class="hero-badge">🏅 Application Officielle Cross Scolaire</div>
+                <h1 class="hero-title">Classement <span>Cross</span></h1>
+                <p class="hero-desc">
+                    Importez votre fichier Excel de résultats pour trier automatiquement les élèves, générer les podiums
+                    Filles /
+                    Garçons, calculer le classement inter-classes sur 150+ coureurs et attribuer les notes EPS sur 20
+                    selon la VMA
+                    de chaque élève.
+                </p>
+
+                <div class="import-zone">
+                    <input type="file" id="crossFileInput" accept=".xlsx,.xls,.csv" class="hidden"
+                        onchange="handleCrossFileUpload(event)" />
+                    <button class="btn-import-giant" onclick="document.getElementById('crossFileInput').click()">
+                        📂 Importer classement (Excel / CSV)
+                    </button>
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
+                        <button class="btn btn-outline btn-sm" onclick="loadDemoCrossDataset()">
+                            ⚡ Charger une course de démonstration (40 élèves)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Liste des boutons de fichiers importés -->
+            <div id="importedFilesSection" class="imported-files-section hidden">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <h2 class="section-subtitle">📋 Fichiers de classement importés (Cliquez sur un fichier pour
+                        l'ouvrir)
+                    </h2>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="clearAllSavedCourses()">
+                        🗑️ Supprimer tous les classements sauvegardés
+                    </button>
+                </div>
+                <div id="filesGrid" class="files-grid"></div>
+            </div>
+        </section>
+
+        <!-- ================= PAGE TABLEAU DE BORD DU FICHIER ================= -->
+        <section id="dashboardView" class="dashboard-view hidden">
+
+            <!-- Bandeau d'information du fichier actif -->
+            <div class="race-banner">
+                <div class="race-banner-info">
+                    <div class="race-banner-title">
+                        <span>🏁</span>
+                        <span id="activeFileNameLabel">Fichier.xlsx</span>
+                    </div>
+                    <span style="color: var(--text-muted); font-size: 0.88rem;">
+                        Sélectionnez l'un des 5 outils ci-dessous pour analyser ou noter la course.
+                    </span>
+                </div>
+                <div class="stats-pills" id="raceQuickStats"></div>
+            </div>
+
+            <!-- Les 5 boutons demandés en Flexbox -->
+            <nav class="nav-buttons-bar">
+                <button class="nav-tab-btn active" id="tabBtn1" onclick="switchTab(1)">
+                    <span class="nav-tab-num">1</span>
+                    <span>Afficher le tableau des résultats</span>
+                </button>
+                <button class="nav-tab-btn" id="tabBtn2" onclick="switchTab(2)">
+                    <span class="nav-tab-num">2</span>
+                    <span>Afficher les résultats filles / garçons</span>
+                </button>
+                <button class="nav-tab-btn" id="tabBtn3" onclick="switchTab(3)">
+                    <span class="nav-tab-num">3</span>
+                    <span>Afficher les résultats par classe</span>
+                </button>
+                <button class="nav-tab-btn" id="tabBtn4" onclick="switchTab(4)">
+                    <span class="nav-tab-num">4</span>
+                    <span>Classement des classes</span>
+                </button>
+                <button class="nav-tab-btn" id="tabBtn5" onclick="switchTab(5)">
+                    <span class="nav-tab-num">5</span>
+                    <span>Création des notes (VMA)</span>
+                </button>
+            </nav>
+
+            <!-- VUE 1 : TABLEAU DES RÉSULTATS -->
+            <div id="tabContent1" class="panel-card">
+                <div class="panel-header">
+                    <div class="panel-title">🏆 Tableau Général des Résultats</div>
+                    <div class="search-filter-bar">
+                        <input type="text" id="searchGeneralInput" class="input-sport"
+                            placeholder="🔍 Rechercher nom, prénom, dossard, classe..."
+                            oninput="renderGeneralTable()" />
+                        <button class="btn btn-outline btn-sm" onclick="exportCurrentGeneralToExcel()">📊 Exporter
+                            Excel</button>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table class="sport-table">
+                        <thead>
+                            <tr>
+                                <th>Rang</th>
+                                <th>Dossard</th>
+                                <th>Nom</th>
+                                <th>Prénom</th>
+                                <th>Sexe</th>
+                                <th>Classe</th>
+                                <th>Catégorie</th>
+                                <th>Établissement</th>
+                                <th>Temps</th>
+                                <th>Vitesse</th>
+                                <th>Allure</th>
+                            </tr>
+                        </thead>
+                        <tbody id="generalTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- VUE 2 : RÉSULTATS FILLES / GARÇONS (2 TABLEAUX) -->
+            <div id="tabContent2" class="panel-card hidden">
+                <div class="panel-header">
+                    <div class="panel-title">⚡ Résultats séparés : Garçons & Filles</div>
+                    <div style="color: var(--text-muted); font-size: 0.9rem;">
+                        Tri automatique basé sur la colonne <strong>Sexe</strong> du fichier importé
+                    </div>
+                </div>
+
+                <div class="split-tables-flex">
+                    <!-- Tableau Garçons -->
+                    <div class="split-column">
+                        <div class="column-banner banner-boys">
+                            <span>🏃‍♂️ CLASSEMENT GARÇONS (M)</span>
+                            <span id="boysCountBadge" class="stat-pill">0 coureurs</span>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="sport-table">
+                                <thead>
+                                    <tr>
+                                        <th>Rang G.</th>
+                                        <th>Rang Gén.</th>
+                                        <th>Dossard</th>
+                                        <th>Nom</th>
+                                        <th>Prénom</th>
+                                        <th>Classe</th>
+                                        <th>Temps</th>
+                                        <th>Vitesse</th>
+                                        <th>Allure</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="boysTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Tableau Filles -->
+                    <div class="split-column">
+                        <div class="column-banner banner-girls">
+                            <span>🏃‍♀️ CLASSEMENT FILLES (F)</span>
+                            <span id="girlsCountBadge" class="stat-pill">0 coureuses</span>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="sport-table">
+                                <thead>
+                                    <tr>
+                                        <th>Rang F.</th>
+                                        <th>Rang Gén.</th>
+                                        <th>Dossard</th>
+                                        <th>Nom</th>
+                                        <th>Prénom</th>
+                                        <th>Classe</th>
+                                        <th>Temps</th>
+                                        <th>Vitesse</th>
+                                        <th>Allure</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="girlsTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VUE 3 : RÉSULTATS PAR CLASSE -->
+            <div id="tabContent3" class="panel-card hidden">
+                <div class="panel-header">
+                    <div class="panel-title">🏫 Résultats par Classe</div>
+                    <div class="search-filter-bar">
+                        <label for="classSelectFilter" style="font-size: 0.9rem; color: var(--text-muted);">Filtrer une
+                            classe
+                            :</label>
+                        <select id="classSelectFilter" class="input-sport" onchange="renderByClassView()">
+                            <option value="ALL">Toutes les classes</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="byClassContainer" class="classes-cards-container"></div>
+            </div>
+
+            <!-- VUE 4 : CLASSEMENT DES CLASSES (ALGORITHME PAR TRANCHES JUSQU'À 150 COUREURS) -->
+            <div id="tabContent4" class="panel-card hidden">
+                <div class="panel-header">
+                    <div class="panel-title">🥇 Classement Général des Classes</div>
+                    <div class="search-filter-bar">
+                        <span style="font-size: 0.88rem; color: var(--text-muted);">Mode de classement :</span>
+                        <select id="classRankingMode" class="input-sport" onchange="renderClassRankingView()">
+                            <option value="AVG">Score Pondéré : Score Total ÷ Coureurs avec un temps (Officiel)</option>
+                            <option value="TOTAL">Score Total Net de la classe (Points - Pénalités)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Explication du barème par tranches jusqu'à 150 coureurs + gestion des absents -->
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div style="font-size: 0.9rem; font-weight: 700; color: var(--text-muted);">
+                        📐 Algorithme de classement des classes (Tranches sur 150 coureurs, division par le nombre de
+                        coureurs avec un temps &amp; gestion des absences) :
+                    </div>
+                    <div class="bareme-grid">
+                        <div class="bareme-chip"><span class="bareme-rank">Top 1 à 5</span><span class="bareme-pts">100
+                                pts</span>
+                        </div>
+                        <div class="bareme-chip"><span class="bareme-rank">Rang 6 à 10</span><span class="bareme-pts">90
+                                pts</span>
+                        </div>
+                        <div class="bareme-chip"><span class="bareme-rank">Rang 11 à 20</span><span
+                                class="bareme-pts">80 pts</span>
+                        </div>
+                        <div class="bareme-chip"><span class="bareme-rank">Rang 21 à 35</span><span
+                                class="bareme-pts">70 pts</span>
+                        </div>
+                        <div class="bareme-chip"><span class="bareme-rank">Rang 36 à 50</span><span
+                                class="bareme-pts">60 pts</span>
+                        </div>
+                        <div class="bareme-chip"><span class="bareme-rank">Rang 51 à 70</span><span
+                                class="bareme-pts">50 pts</span>
+                        </div>
+                        <div class="bareme-chip"><span class="bareme-rank">Rang 71 à 90</span><span
+                                class="bareme-pts">40 pts</span>
+                        </div>
+                        <div class="bareme-chip"><span class="bareme-rank">Rang 91 à 110</span><span
+                                class="bareme-pts">30
+                                pts</span></div>
+                        <div class="bareme-chip"><span class="bareme-rank">Rang 111 à 130</span><span
+                                class="bareme-pts">20
+                                pts</span></div>
+                        <div class="bareme-chip"><span class="bareme-rank">Rang 131 à 150</span><span
+                                class="bareme-pts">15
+                                pts</span></div>
+                        <div class="bareme-chip"><span class="bareme-rank">Rang &gt; 150</span><span
+                                class="bareme-pts">10
+                                pts</span></div>
+                        <div class="bareme-chip"
+                            style="border-color: rgba(239, 68, 68, 0.45); background: rgba(239, 68, 68, 0.08);">
+                            <span class="bareme-rank" style="color: #fca5a5;">⚠️ "Non arrivée"</span>
+                            <span class="bareme-pts" style="color: #f87171;">-25 pts (Pénalité)</span>
+                        </div>
+                        <div class="bareme-chip"
+                            style="border-color: rgba(148, 163, 184, 0.4); background: rgba(148, 163, 184, 0.08);">
+                            <span class="bareme-rank" style="color: #cbd5e1;">🛡️ "Absence justifiée" /
+                                "Dispensé"</span>
+                            <span class="bareme-pts" style="color: #94a3b8;">0 pénalité (Neutre)</span>
+                        </div>
+                    </div>
+                    <div
+                        style="font-size: 0.84rem; color: var(--text-muted); background: rgba(15, 23, 42, 0.55); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color);">
+                        ⚖️ <strong>Formule d'équité :</strong>
+                        <code>Score Classe = (Somme des points des coureurs arrivés − 25 pts × Nb "Non arrivée") ÷ Nombre de coureurs avec un temps</code>.
+                        Ainsi, un élève qui court et termine (même dernier : +10 à +30 pts) rapporte toujours beaucoup
+                        plus à sa classe qu'une <em>"Non arrivée"</em> (-25 pts sur le total de la classe), tandis
+                        qu'une <em>"Absence justifiée"</em> ou un élève <em>"Dispensé"</em> n'impacte ni le score ni le
+                        diviseur.
+                    </div>
+                </div>
+
+                <!-- Podium visuel des 3 meilleures classes -->
+                <div id="classesPodium" class="podium-flex"></div>
+
+                <!-- Tableau complet du classement des classes -->
+                <div class="table-wrapper">
+                    <table class="sport-table">
+                        <thead>
+                            <tr>
+                                <th>Rang Classe</th>
+                                <th>Classe</th>
+                                <th>Score Classe (Pts / Coureur avec temps)</th>
+                                <th>Score Total Net</th>
+                                <th>Coureurs avec temps</th>
+                                <th>Non arrivées (Pénalité)</th>
+                                <th>Abs. justifiées / Dispensés</th>
+                                <th>Meilleur Rang</th>
+                                <th>Détail des élèves</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="classRankingTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- VUE 5 : CRÉATION DES NOTES (IMPORT VMA + BARÈME SCIENTIFIQUE BIENVEILLANT) -->
+            <div id="tabContent5" class="panel-card hidden">
+                <div class="panel-header">
+                    <div class="panel-title">🎓 Création des Notes EPS sur 20 (Comparaison Vitesse Cross / VMA)</div>
+                    <div class="search-filter-bar">
+                        <input type="file" id="vmaFileInput" accept=".xlsx,.xls,.csv" class="hidden"
+                            onchange="handleVmaFileUpload(event)" />
+                        <button class="btn btn-green" onclick="document.getElementById('vmaFileInput').click()">
+                            📥 Importer les VMA (Excel / CSV)
+                        </button>
+                        <button class="btn btn-outline btn-sm" onclick="loadDemoVmaForActiveCourse()">
+                            ⚡ Générer VMA de test pour ces élèves
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="exportGradesToExcel()">
+                            💾 Exporter les notes (Excel)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Encadré explicatif de l'algorithme scientifique et bienveillant -->
+                <div class="science-box">
+                    <div class="science-title">
+                        🔬 Algorithme Physiologique & Bienveillant — Calibré Cross 1600m à 2300m (Léger, Billat,
+                        Berthoin)
+                    </div>
+                    <p style="font-size: 0.9rem; color: #e2e8f0; line-height: 1.55;">
+                        Le barème octroie <strong>19 / 20 dès 95% de VMA</strong> (et 20/20 aux podiums F/G),
+                        puis descend progressivement selon l'intensité soutenue :
+                    </p>
+                    <div class="bareme-grid" style="background: rgba(15, 23, 42, 0.55);">
+                        <div class="bareme-chip">
+                            <span class="bareme-rank">🥇 Podium 1er, 2e, 3e (F &amp; G)</span>
+                            <span class="bareme-pts" style="color: #34d399;">20 / 20 d'office</span>
+                        </div>
+                        <div class="bareme-chip">
+                            <span class="bareme-rank">≥ 95% de sa VMA</span>
+                            <span class="bareme-pts" style="color: #34d399;">19 / 20</span>
+                        </div>
+                        <div class="bareme-chip">
+                            <span class="bareme-rank">90% à 94,9% VMA</span>
+                            <span class="bareme-pts" style="color: #34d399;">18 / 20</span>
+                        </div>
+                        <div class="bareme-chip">
+                            <span class="bareme-rank">85% à 89,9% VMA</span>
+                            <span class="bareme-pts" style="color: #34d399;">17 / 20</span>
+                        </div>
+                        <div class="bareme-chip">
+                            <span class="bareme-rank">80% à 84,9% VMA</span>
+                            <span class="bareme-pts" style="color: #60a5fa;">16 / 20</span>
+                        </div>
+                        <div class="bareme-chip">
+                            <span class="bareme-rank">75% à 79,9% VMA</span>
+                            <span class="bareme-pts" style="color: #60a5fa;">14,5 / 20</span>
+                        </div>
+                        <div class="bareme-chip">
+                            <span class="bareme-rank">70% à 74,9% VMA</span>
+                            <span class="bareme-pts" style="color: #60a5fa;">13 / 20</span>
+                        </div>
+                        <div class="bareme-chip">
+                            <span class="bareme-rank">65% à 69,9% VMA</span>
+                            <span class="bareme-pts" style="color: #fbbf24;">11,5 / 20</span>
+                        </div>
+                        <div class="bareme-chip">
+                            <span class="bareme-rank">60% à 64,9% VMA</span>
+                            <span class="bareme-pts" style="color: #fbbf24;">10 / 20</span>
+                        </div>
+                        <div class="bareme-chip">
+                            <span class="bareme-rank">55% à 59,9% VMA</span>
+                            <span class="bareme-pts">9 / 20</span>
+                        </div>
+                        <div class="bareme-chip">
+                            <span class="bareme-rank">&lt; 55% VMA (Course finie)</span>
+                            <span class="bareme-pts">8 / 20</span>
+                        </div>
+                    </div>
+                    <div id="vmaMatchSummary" style="font-size: 0.88rem; color: #fbbf24; font-weight: 600;">
+                        💡 Astuce : Importez un fichier Excel contenant les colonnes <strong>Nom</strong>,
+                        <strong>Prénom</strong>
+                        et <strong>VMA</strong>, ou saisissez/ajustez directement la VMA d'un élève dans la colonne
+                        dédiée
+                        ci-dessous.
+                    </div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="sport-table">
+                        <thead>
+                            <tr>
+                                <th>Rang Gén.</th>
+                                <th>Rang Sexe</th>
+                                <th>Nom</th>
+                                <th>Prénom</th>
+                                <th>Sexe</th>
+                                <th>Classe</th>
+                                <th>Vitesse Cross</th>
+                                <th>VMA Élève (km/h)</th>
+                                <th>% VMA Soutenu</th>
+                                <th>Appréciation de l'effort</th>
+                                <th>Note / 20</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gradesTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <footer class="app-footer">
+        <div>🏃‍♂️ <strong>Classement Cross Scolaire</strong> — Mise en page 100% Flexbox • Compatible Excel (.xlsx,
+            .xls,
+            .csv)</div>
+        <div>Algorithme de classement sur 150 coureurs &amp; Notation scientifique VMA</div>
+    </footer>
+
+    <script>
+        // ============================================================================
+        // ÉTAT DE L'APPLICATION & PERSISTANCE LOCALSTORAGE
+        // ============================================================================
+        const STORAGE_KEY = 'classement_cross_app_state_v1';
+
+        const appState = {
+            importedFiles: [], // Liste des fichiers importés { id, fileName, runners: [], vmaMap: {} }
+            activeFileId: null,
+            activeTab: 1
+        };
+
+        function saveStateToLocalStorage() {
+            try {
+                const payload = {
+                    importedFiles: appState.importedFiles,
+                    activeFileId: appState.activeFileId,
+                    activeTab: appState.activeTab
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+            } catch (err) {
+                console.warn('Impossible de sauvegarder dans localStorage :', err);
+            }
+        }
+
+        function loadStateFromLocalStorage() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return;
+                const parsed = JSON.parse(raw);
+                if (parsed && Array.isArray(parsed.importedFiles)) {
+                    appState.importedFiles = parsed.importedFiles;
+                    appState.activeFileId = parsed.activeFileId || null;
+                    appState.activeTab = parsed.activeTab || 1;
+                }
+            } catch (err) {
+                console.warn('Impossible de charger depuis localStorage :', err);
+            }
+        }
+
+        // ============================================================================
+        // FONCTIONS UTILITAIRES DE PARSING & NORMALISATION
+        // ============================================================================
+
+        function normalizeText(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .trim()
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-z0-9]/g, '');
+        }
+
+        // Extrait un nombre flottant depuis "17,1 km/h", "14.5", etc.
+        function parseSpeedNumber(val) {
+            if (typeof val === 'number') return val;
+            if (!val) return NaN;
+            const cleaned = String(val).replace(',', '.').replace(/[^0-9.]/g, '');
+            const parsed = parseFloat(cleaned);
+            return isNaN(parsed) ? NaN : parsed;
+        }
+
+        // Normalise le sexe ("M", "G", "H", "Garçon", "Masculin" -> "M" ; "F", "Fille", "Féminin" -> "F")
+        function normalizeSexe(val) {
+            const s = String(val || '').trim().toUpperCase();
+            if (s.startsWith('F')) return 'F';
+            if (s.startsWith('M') || s.startsWith('G') || s.startsWith('H')) return 'M';
+            return s || 'M';
+        }
+
+        // Formate un temps Excel (si fraction de jour ou texte)
+        function formatTimeValue(val) {
+            if (val === null || val === undefined || val === '') return '-';
+            if (typeof val === 'number' && val < 1 && val > 0) {
+                const totalSeconds = val * 86400;
+                const mins = Math.floor(totalSeconds / 60);
+                const secs = (totalSeconds % 60).toFixed(1);
+                return `${String(mins).padStart(2, '0')}:${secs.padStart(4, '0')}`;
+            }
+            return String(val).trim();
+        }
+
+        // Trouve une valeur dans une ligne Excel quel que soit la casse/accents de l'en-tête
+        function getFieldFromRow(row, candidateHeaders) {
+            const keys = Object.keys(row);
+            for (const candidate of candidateHeaders) {
+                const normCandidate = normalizeText(candidate);
+                for (const k of keys) {
+                    if (normalizeText(k) === normCandidate || normalizeText(k).includes(normCandidate)) {
+                        return row[k];
+                    }
+                }
+            }
+            return '';
+        }
+
+        // Pénalité appliquée au score total de la classe pour chaque "non arrivée"
+        const PENALTY_NON_ARRIVEE = 25;
+
+        // Détecte le statut d'un élève selon les colonnes Temps et Vitesse :
+        // - 'EXCUSED'  : "absence justifiée" ou "dispensé" -> 0 pénalité, neutre dans la division
+        // - 'DNF'      : "non arrivée" (ou abandon / sans temps) -> pénalité de -25 pts sur le score de la classe
+        // - 'FINISHER' : coureur avec un temps valide -> rapporte les points de son rang et compte dans le diviseur
+        function detectRunnerStatus(rawTemps, rawVitesse, vitesseNum) {
+            const normT = normalizeText(rawTemps);
+            const normV = normalizeText(rawVitesse);
+            const combined = normT + ' ' + normV;
+
+            if (
+                combined.includes('absencejustifie') ||
+                combined.includes('absjustifie') ||
+                combined.includes('justifie') ||
+                combined.includes('dispens')
+            ) {
+                const label = combined.includes('dispens') ? 'Dispensé(e)' : 'Absence justifiée';
+                return { status: 'EXCUSED', statusLabel: label };
+            }
+
+            if (
+                combined.includes('nonarrive') ||
+                combined.includes('abandon') ||
+                combined.includes('dnf') ||
+                combined.includes('absent')
+            ) {
+                return { status: 'DNF', statusLabel: 'Non arrivée' };
+            }
+
+            const hasValidTime = normT.length > 0 && /[0-9]/.test(normT);
+            const hasValidSpeed = !isNaN(vitesseNum) && vitesseNum > 0;
+
+            if (hasValidTime || hasValidSpeed) {
+                return { status: 'FINISHER', statusLabel: 'Classé' };
+            }
+
+            return { status: 'DNF', statusLabel: 'Non arrivée' };
+        }
+
+        // Recalcule les rangs généraux et par sexe uniquement pour les coureurs arrivés avec un temps
+        function recalculateCourseRanks(runners) {
+            const finishers = runners.filter(r => r.status === 'FINISHER');
+            const nonFinishers = runners.filter(r => r.status !== 'FINISHER');
+
+            finishers.sort((a, b) => (a.initialOrder ?? 999999) - (b.initialOrder ?? 999999));
+
+            let rankM = 0;
+            let rankF = 0;
+            finishers.forEach((r, index) => {
+                r.rang = index + 1;
+                if (r.sexe === 'F') {
+                    rankF++;
+                    r.rangSexe = rankF;
+                } else {
+                    rankM++;
+                    r.rangSexe = rankM;
+                }
+            });
+
+            nonFinishers.forEach(r => {
+                r.rang = null;
+                r.rangSexe = null;
+            });
+
+            runners.length = 0;
+            runners.push(...finishers, ...nonFinishers);
+            return runners;
+        }
+
+        // Parse les lignes brutes d'un fichier de classement Cross
+        function parseRunnersFromRawRows(rawRows) {
+            const runners = [];
+
+            rawRows.forEach((row, idx) => {
+                const nom = String(getFieldFromRow(row, ['Nom', 'Last Name']) || '').trim();
+                const prenom = String(getFieldFromRow(row, ['Prénom', 'Prenom', 'First Name']) || '').trim();
+                // Ignorer les lignes totalement vides
+                if (!nom && !prenom) return;
+
+                const rawRank = getFieldFromRow(row, ['Rang', 'Place', 'Classement']);
+                const parsedRank = parseInt(String(rawRank).replace(/[^0-9]/g, ''), 10);
+
+                const dossard = String(getFieldFromRow(row, ['Dossard', 'Bib', 'Numéro']) || (300 + idx + 1)).trim();
+                const sexe = normalizeSexe(getFieldFromRow(row, ['Sexe', 'Genre', 'Sex']));
+                const classe = String(getFieldFromRow(row, ['Classe', 'Class', 'Division']) || 'Sans classe').trim();
+                const categorie = String(getFieldFromRow(row, ['Catégorie', 'Categorie']) || 'Minimes').trim();
+                const etablissement = String(getFieldFromRow(row, ['Établissement', 'Etablissement', 'tablisseme', 'Collège']) || '').trim();
+                const rawTemps = getFieldFromRow(row, ['Temps', 'Chrono', 'Time']);
+                const temps = formatTimeValue(rawTemps);
+
+                const rawVitesse = getFieldFromRow(row, ['Vitesse', 'Speed', 'km/h']);
+                const vitesseNum = parseSpeedNumber(rawVitesse);
+                const statusInfo = detectRunnerStatus(rawTemps, rawVitesse, vitesseNum);
+
+                const vitesseDisplay = statusInfo.status === 'FINISHER' && !isNaN(vitesseNum)
+                    ? (String(rawVitesse).includes('km/h') ? String(rawVitesse).trim() : `${vitesseNum.toFixed(1).replace('.', ',')} km/h`)
+                    : (statusInfo.status !== 'FINISHER' ? statusInfo.statusLabel : String(rawVitesse || '-'));
+
+                const tempsDisplay = statusInfo.status === 'FINISHER' ? temps : statusInfo.statusLabel;
+                const allure = statusInfo.status === 'FINISHER'
+                    ? String(getFieldFromRow(row, ['Allure', 'Pace']) || '-').trim()
+                    : '-';
+
+                runners.push({
+                    id: `runner_${idx}_${Date.now()}`,
+                    initialOrder: !isNaN(parsedRank) ? parsedRank : idx + 1,
+                    rang: statusInfo.status === 'FINISHER' ? (!isNaN(parsedRank) ? parsedRank : idx + 1) : null,
+                    rangSexe: null,
+                    status: statusInfo.status,
+                    statusLabel: statusInfo.statusLabel,
+                    dossard,
+                    nom,
+                    prenom,
+                    sexe,
+                    classe,
+                    categorie,
+                    etablissement,
+                    temps: tempsDisplay,
+                    vitesseDisplay,
+                    vitesseNum: (statusInfo.status === 'FINISHER' && !isNaN(vitesseNum)) ? vitesseNum : null,
+                    allure,
+                    vma: null // Sera rempli lors de l'import VMA ou saisie manuelle
+                });
+            });
+
+            return recalculateCourseRanks(runners);
+        }
+
+        // ============================================================================
+        // ALGORITHME DE POINTS PAR CLASSE (TRANCHES JUSQU'À 150 COUREURS)
+        // ============================================================================
+        function getPointsForRank(rank) {
+            if (!rank || rank <= 0) return 0;
+            if (rank >= 1 && rank <= 5) return 100;     // Top 5 : 100 pts
+            if (rank >= 6 && rank <= 10) return 90;     // Tranche 6-10 : 90 pts
+            if (rank >= 11 && rank <= 20) return 80;    // Tranche 11-20 : 80 pts
+            if (rank >= 21 && rank <= 35) return 70;    // Tranche 21-35 : 70 pts
+            if (rank >= 36 && rank <= 50) return 60;    // Tranche 36-50 : 60 pts
+            if (rank >= 51 && rank <= 70) return 50;    // Tranche 51-70 : 50 pts
+            if (rank >= 71 && rank <= 90) return 40;    // Tranche 71-90 : 40 pts
+            if (rank >= 91 && rank <= 110) return 30;   // Tranche 91-110 : 30 pts
+            if (rank >= 111 && rank <= 130) return 20;  // Tranche 111-130 : 20 pts
+            if (rank >= 131 && rank <= 150) return 15;  // Tranche 131-150 : 15 pts
+            return 10;                                  // > 150 : 10 pts (participation finisseur)
+        }
+
+        // Retourne les points (ou pénalité) d'un coureur pour sa classe
+        function getRunnerClassPoints(runner) {
+            if (runner.status === 'FINISHER') return getPointsForRank(runner.rang);
+            if (runner.status === 'DNF') return -PENALTY_NON_ARRIVEE;
+            return 0; // 'EXCUSED' : Absence justifiée ou Dispensé -> 0 pénalité
+        }
+
+        // ============================================================================
+        // ALGORITHME SCIENTIFIQUE & BIENVEILLANT DE NOTATION VMA (/20)
+        // ============================================================================
+        function computeStudentGrade(runner) {
+            if (runner.status === 'EXCUSED') {
+                return {
+                    note: 'Disp./Abs.',
+                    pctVma: null,
+                    label: `🛡️ ${runner.statusLabel} — Aucune pénalité (Non noté)`,
+                    badgeClass: 'note-good'
+                };
+            }
+            if (runner.status === 'DNF') {
+                return {
+                    note: 0,
+                    pctVma: null,
+                    label: '⚠️ Non arrivée — Course non terminée',
+                    badgeClass: 'note-medium'
+                };
+            }
+
+            const isPodium = runner.rangSexe >= 1 && runner.rangSexe <= 3;
+            const speed = runner.vitesseNum;
+            const vma = runner.vma;
+
+            // Règle 1 : Les élèves sur le podium (1er, 2e, 3e Filles et 1er, 2e, 3e Garçons) ont automatiquement 20/20
+            if (isPodium) {
+                const pct = (speed && vma && vma > 0) ? (speed / vma) * 100 : null;
+                return {
+                    note: 20,
+                    pctVma: pct,
+                    label: `🏆 Podium ${runner.sexe === 'F' ? 'Filles' : 'Garçons'} (${runner.rangSexe}${runner.rangSexe === 1 ? 'er' : 'e'}) — 20/20 automatique`,
+                    badgeClass: 'note-excellent'
+                };
+            }
+
+            if (!vma || vma <= 0 || !speed || speed <= 0) {
+                return {
+                    note: null,
+                    pctVma: null,
+                    label: 'En attente de VMA',
+                    badgeClass: 'note-medium'
+                };
+            }
+
+            const pct = (speed / vma) * 100;
+
+            // Barème physiologique adapté au Cross Collège (1600m à 2300m) :
+            // Tenir 100% VMA sur 1600m-2300m étant physiologiquement impossible, 19/20 est attribué dès 95% VMA
+            // puis la note descend progressivement selon l'intensité soutenue.
+            if (pct >= 95) {
+                return { note: 19, pctVma: pct, label: '🔥 Performance exceptionnelle sur 1600-2300m (≥ 95% VMA)', badgeClass: 'note-excellent' };
+            } else if (pct >= 90) {
+                return { note: 18, pctVma: pct, label: '🌟 Engagement maximal Cross (90-94,9% VMA)', badgeClass: 'note-excellent' };
+            } else if (pct >= 85) {
+                return { note: 17, pctVma: pct, label: '💪 Très haute intensité aérobie (85-89,9% VMA)', badgeClass: 'note-excellent' };
+            } else if (pct >= 80) {
+                return { note: 16, pctVma: pct, label: '👏 Effort soutenu optimal Cross (80-84,9% VMA)', badgeClass: 'note-good' };
+            } else if (pct >= 75) {
+                return { note: 14.5, pctVma: pct, label: '👍 Bon engagement régulier (75-79,9% VMA)', badgeClass: 'note-good' };
+            } else if (pct >= 70) {
+                return { note: 13, pctVma: pct, label: '✔️ Endurance active continue (70-74,9% VMA)', badgeClass: 'note-good' };
+            } else if (pct >= 65) {
+                return { note: 11.5, pctVma: pct, label: '🙂 Effort modéré continu (65-69,9% VMA)', badgeClass: 'note-medium' };
+            } else if (pct >= 60) {
+                return { note: 10, pctVma: pct, label: '🚶 Allure d’endurance fondamentale (60-64,9% VMA)', badgeClass: 'note-medium' };
+            } else if (pct >= 55) {
+                return { note: 9, pctVma: pct, label: 'Effort discontinu (55-59,9% VMA)', badgeClass: 'note-medium' };
+            } else {
+                return { note: 8, pctVma: pct, label: 'Course terminée (< 55% VMA)', badgeClass: 'note-medium' };
+            }
+        }
+
+        // ============================================================================
+        // IMPORTATION & SUPPRESSION DE FICHIERS / CLASSES
+        // ============================================================================
+        function handleCrossFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const rawRows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+
+                    const runners = parseRunnersFromRawRows(rawRows);
+                    if (runners.length === 0) {
+                        alert("Aucune ligne d'élève valide n'a été détectée dans ce fichier. Vérifiez que les colonnes Nom, Prénom, Sexe, Classe, Vitesse sont bien présentes.");
+                        return;
+                    }
+
+                    addImportedCourse(file.name, runners);
+                    event.target.value = '';
+                } catch (err) {
+                    console.error(err);
+                    alert("Erreur lors de la lecture du fichier Excel : " + err.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function addImportedCourse(fileName, runners) {
+            const courseObj = {
+                id: 'file_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+                fileName,
+                importedAt: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+                runners
+            };
+            appState.importedFiles.push(courseObj);
+            saveStateToLocalStorage();
+            renderImportedFilesButtons();
+        }
+
+        // Supprimer tous les classements sauvegardés (vider le localStorage)
+        function clearAllSavedCourses() {
+            if (!confirm('Voulez-vous vraiment supprimer tous les classements importés et vider la sauvegarde locale ?')) return;
+            appState.importedFiles = [];
+            appState.activeFileId = null;
+            appState.activeTab = 1;
+            saveStateToLocalStorage();
+            showHomePage();
+        }
+
+        // Supprimer un fichier de classement importé depuis la page d'accueil
+        function deleteImportedCourse(fileId, event) {
+            if (event) event.stopPropagation();
+            const target = appState.importedFiles.find(f => f.id === fileId);
+            if (!target) return;
+            if (!confirm(`Voulez-vous vraiment supprimer le classement importé "${target.fileName}" ?`)) return;
+
+            appState.importedFiles = appState.importedFiles.filter(f => f.id !== fileId);
+            if (appState.activeFileId === fileId) {
+                appState.activeFileId = null;
+                saveStateToLocalStorage();
+                showHomePage();
+            } else {
+                saveStateToLocalStorage();
+                renderImportedFilesButtons();
+            }
+        }
+
+        // Supprimer une classe spécifique qui a été importée dans la course active
+        function deleteClassFromActiveCourse(className) {
+            const course = getActiveCourse();
+            if (!course) return;
+
+            const countInClass = course.runners.filter(r => r.classe === className).length;
+            if (countInClass === 0) return;
+
+            if (!confirm(`Voulez-vous vraiment supprimer la classe "${className}" (${countInClass} élève${countInClass > 1 ? 's' : ''}) de ce classement ?`)) {
+                return;
+            }
+
+            course.runners = course.runners.filter(r => r.classe !== className);
+
+            if (course.runners.length === 0) {
+                // Si toutes les classes du fichier ont été supprimées, on retire le fichier et on revient à l'accueil
+                appState.importedFiles = appState.importedFiles.filter(f => f.id !== course.id);
+                appState.activeFileId = null;
+                saveStateToLocalStorage();
+                showHomePage();
+                return;
+            }
+
+            recalculateCourseRanks(course.runners);
+            saveStateToLocalStorage();
+            updateDashboardBannerStats();
+            populateClassFilterDropdown();
+            switchTab(appState.activeTab);
+        }
+
+        // Affiche les boutons avec le nom de chaque fichier importé sur la page d'accueil
+        function renderImportedFilesButtons() {
+            const section = document.getElementById('importedFilesSection');
+            const grid = document.getElementById('filesGrid');
+
+            if (appState.importedFiles.length === 0) {
+                section.classList.add('hidden');
+                return;
+            }
+
+            section.classList.remove('hidden');
+            grid.innerHTML = appState.importedFiles.map((fileObj, idx) => {
+                const boysCount = fileObj.runners.filter(r => r.sexe !== 'F').length;
+                const girlsCount = fileObj.runners.filter(r => r.sexe === 'F').length;
+                const classesCount = new Set(fileObj.runners.map(r => r.classe)).size;
+
+                return `
+          <div class="file-button-card" onclick="openCourseDashboard('${fileObj.id}')">
+            <div class="file-btn-left">
+              <div class="file-bib-badge">
+                <span style="font-size: 0.65rem; color: #64748b;">COURSE</span>
+                <span>#${idx + 1}</span>
+              </div>
+              <div class="file-info">
+                <div class="file-name-title">📄 ${escapeHtml(fileObj.fileName)}</div>
+                <div class="file-meta">
+                  <span>👟 <strong>${fileObj.runners.length}</strong> élèves</span>
+                  <span>👦 ${boysCount} G / 👧 ${girlsCount} F</span>
+                  <span>🏫 ${classesCount} classe${classesCount > 1 ? 's' : ''}</span>
+                </div>
+              </div>
+            </div>
+            <div class="file-card-actions">
+              <span class="file-open-arrow">
+                Ouvrir le classement ➔
+              </span>
+              <button
+                type="button"
+                class="btn btn-danger btn-sm"
+                title="Supprimer ce classement importé"
+                onclick="deleteImportedCourse('${fileObj.id}', event)"
+              >
+                🗑️ Supprimer
+              </button>
+            </div>
+          </div>
+        `;
+            }).join('');
+        }
+
+        // ============================================================================
+        // NAVIGATION ACCUEIL <-> TABLEAU DE BORD & 5 BOUTONS
+        // ============================================================================
+        function updateDashboardBannerStats() {
+            const activeCourse = getActiveCourse();
+            if (!activeCourse) return;
+
+            document.getElementById('activeFileNameLabel').textContent = activeCourse.fileName;
+
+            const boys = activeCourse.runners.filter(r => r.sexe !== 'F').length;
+            const girls = activeCourse.runners.filter(r => r.sexe === 'F').length;
+            const classes = new Set(activeCourse.runners.map(r => r.classe)).size;
+            const finishers = activeCourse.runners.filter(r => r.status === 'FINISHER').length;
+
+            document.getElementById('raceQuickStats').innerHTML = `
+        <span class="stat-pill">🏃 Inscrits : <strong>${activeCourse.runners.length}</strong> (${finishers} arrivés)</span>
+        <span class="stat-pill">👦 Garçons : <strong>${boys}</strong></span>
+        <span class="stat-pill">👧 Filles : <strong>${girls}</strong></span>
+        <span class="stat-pill">🏫 Classes : <strong>${classes}</strong></span>
+      `;
+        }
+
+        function openCourseDashboard(fileId, initialTab = 1) {
+            appState.activeFileId = fileId;
+            document.getElementById('homeView').classList.add('hidden');
+            document.getElementById('dashboardView').classList.remove('hidden');
+            document.getElementById('backHomeBtn').style.display = 'inline-flex';
+
+            const activeCourse = getActiveCourse();
+            if (!activeCourse) return;
+
+            updateDashboardBannerStats();
+            populateClassFilterDropdown();
+            switchTab(initialTab);
+        }
+
+        function showHomePage() {
+            appState.activeFileId = null;
+            saveStateToLocalStorage();
+            document.getElementById('dashboardView').classList.add('hidden');
+            document.getElementById('homeView').classList.remove('hidden');
+            document.getElementById('backHomeBtn').style.display = 'none';
+            renderImportedFilesButtons();
+        }
+
+        function getActiveCourse() {
+            return appState.importedFiles.find(f => f.id === appState.activeFileId) || null;
+        }
+
+        function switchTab(tabNumber) {
+            appState.activeTab = tabNumber;
+            saveStateToLocalStorage();
+            for (let i = 1; i <= 5; i++) {
+                const btn = document.getElementById(`tabBtn${i}`);
+                const content = document.getElementById(`tabContent${i}`);
+                if (i === tabNumber) {
+                    btn.classList.add('active');
+                    content.classList.remove('hidden');
+                } else {
+                    btn.classList.remove('active');
+                    content.classList.add('hidden');
+                }
+            }
+
+            if (tabNumber === 1) renderGeneralTable();
+            if (tabNumber === 2) renderGenderSplitTables();
+            if (tabNumber === 3) renderByClassView();
+            if (tabNumber === 4) renderClassRankingView();
+            if (tabNumber === 5) renderGradesView();
+        }
+
+        // ============================================================================
+        // RENDU DES 5 PAGES FONCTIONNELLES & MODIFICATION EN DIRECT NON ARRIVÉE / DISPENSÉ
+        // ============================================================================
+
+        // Permet de modifier en direct dans n'importe quel tableau le statut d'un élève
+        // ("Non arrivée" <-> "Dispensé(e)" <-> "Absence justifiée"), ce qui recalcule
+        // immédiatement la pénalité (-25 pts ou 0 pt) et met à jour le classement des classes.
+        function changeRunnerAbsenceStatus(runnerId, newChoice) {
+            const course = getActiveCourse();
+            if (!course) return;
+            const runner = course.runners.find(r => r.id === runnerId);
+            if (!runner) return;
+
+            if (newChoice === 'DNF') {
+                runner.status = 'DNF';
+                runner.statusLabel = 'Non arrivée';
+                runner.temps = 'Non arrivée';
+                runner.vitesseDisplay = 'Non arrivée';
+            } else if (newChoice === 'ABSENCE_JUSTIFIEE') {
+                runner.status = 'EXCUSED';
+                runner.statusLabel = 'Absence justifiée';
+                runner.temps = 'Absence justifiée';
+                runner.vitesseDisplay = 'Absence justifiée';
+            } else {
+                // 'DISPENSE'
+                runner.status = 'EXCUSED';
+                runner.statusLabel = 'Dispensé(e)';
+                runner.temps = 'Dispensé(e)';
+                runner.vitesseDisplay = 'Dispensé(e)';
+            }
+
+            saveStateToLocalStorage();
+            updateDashboardBannerStats();
+            switchTab(appState.activeTab);
+        }
+
+        function formatRankBadge(rank, status, statusLabel) {
+            if (status && status !== 'FINISHER') {
+                if (status === 'DNF') {
+                    return `<span class="status-badge-dnf">⚠️ ${escapeHtml(statusLabel || 'Non arrivée')}</span>`;
+                }
+                return `<span class="status-badge-excused">🛡️ ${escapeHtml(statusLabel || 'Dispensé')}</span>`;
+            }
+            if (!rank) return `<span class="rank-badge">-</span>`;
+            if (rank === 1) return `<span class="rank-badge rank-1">🥇 1</span>`;
+            if (rank === 2) return `<span class="rank-badge rank-2">🥈 2</span>`;
+            if (rank === 3) return `<span class="rank-badge rank-3">🥉 3</span>`;
+            return `<span class="rank-badge">${rank}</span>`;
+        }
+
+        // Affiche soit le temps/vitesse normal, soit un sélecteur interactif + bouton rapide
+        // pour basculer en direct un "Non arrivée" en "Dispensé" (ou "Absence justifiée")
+        function formatStatusTimeInteractive(r) {
+            if (r.status === 'FINISHER') {
+                return `<span style="font-weight: 700;">${escapeHtml(r.temps)}</span>`;
+            }
+            const currentVal = r.status === 'DNF'
+                ? 'DNF'
+                : (normalizeText(r.statusLabel).includes('abs') ? 'ABSENCE_JUSTIFIEE' : 'DISPENSE');
+            const selectClass = r.status === 'DNF' ? 'status-select-dnf' : 'status-select-excused';
+
+            return `
+              <select
+                class="status-select-inline ${selectClass}"
+                title="Modifier le statut pour ajuster en direct la pénalité et le classement des classes"
+                onchange="changeRunnerAbsenceStatus('${r.id}', this.value)"
+              >
+                <option value="DNF" ${currentVal === 'DNF' ? 'selected' : ''}>⚠️ Non arrivée (-${PENALTY_NON_ARRIVEE} pts)</option>
+                <option value="DISPENSE" ${currentVal === 'DISPENSE' ? 'selected' : ''}>🛡️ Dispensé(e) (0 pénalité)</option>
+                <option value="ABSENCE_JUSTIFIEE" ${currentVal === 'ABSENCE_JUSTIFIEE' ? 'selected' : ''}>🛡️ Absence justifiée (0 pénalité)</option>
+              </select>
+            `;
+        }
+
+        function formatStatusSpeedInteractive(r, colorHex) {
+            if (r.status === 'FINISHER') {
+                return `<span style="${colorHex ? `color: ${colorHex};` : ''} font-weight: 700;">${escapeHtml(r.vitesseDisplay)}</span>`;
+            }
+            if (r.status === 'DNF') {
+                return `
+                  <button
+                    type="button"
+                    class="btn-status-toggle"
+                    title="Basculer cet élève en Dispensé (supprime la pénalité de -${PENALTY_NON_ARRIVEE} pts)"
+                    onclick="changeRunnerAbsenceStatus('${r.id}', 'DISPENSE')"
+                  >
+                    🛡️ Passer en Dispensé (0 pt)
+                  </button>
+                `;
+            }
+            return `
+              <button
+                type="button"
+                class="btn-status-toggle btn-status-toggle-dnf"
+                title="Remettre cet élève en Non arrivée (applique la pénalité de -${PENALTY_NON_ARRIVEE} pts)"
+                onclick="changeRunnerAbsenceStatus('${r.id}', 'DNF')"
+              >
+                ⚠️ Passer en Non arrivée (-${PENALTY_NON_ARRIVEE} pts)
+              </button>
+            `;
+        }
+
+        function escapeHtml(str) {
+            return String(str ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        // 1. Afficher le tableau des résultats
+        function renderGeneralTable() {
+            const course = getActiveCourse();
+            if (!course) return;
+
+            const query = (document.getElementById('searchGeneralInput').value || '').trim().toLowerCase();
+            const filtered = course.runners.filter(r => {
+                if (!query) return true;
+                return (
+                    r.nom.toLowerCase().includes(query) ||
+                    r.prenom.toLowerCase().includes(query) ||
+                    r.dossard.toLowerCase().includes(query) ||
+                    r.classe.toLowerCase().includes(query) ||
+                    (r.statusLabel && r.statusLabel.toLowerCase().includes(query))
+                );
+            });
+
+            const tbody = document.getElementById('generalTableBody');
+            tbody.innerHTML = filtered.map(r => `
+        <tr>
+          <td>${formatRankBadge(r.rang, r.status, r.statusLabel)}</td>
+          <td><span class="dossard-tag">${escapeHtml(r.dossard)}</span></td>
+          <td style="font-weight: 700;">${escapeHtml(r.nom)}</td>
+          <td>${escapeHtml(r.prenom)}</td>
+          <td><span class="sexe-badge ${r.sexe === 'F' ? 'sexe-f' : 'sexe-m'}">${r.sexe}</span></td>
+          <td><span class="classe-tag">${escapeHtml(r.classe)}</span></td>
+          <td>${escapeHtml(r.categorie)}</td>
+          <td>${escapeHtml(r.etablissement || '-')}</td>
+          <td style="font-family: 'Chakra Petch', sans-serif; font-weight: 700;">${formatStatusTimeInteractive(r)}</td>
+          <td>${formatStatusSpeedInteractive(r, '#34d399')}</td>
+          <td>${escapeHtml(r.allure)}</td>
+        </tr>
+      `).join('');
+        }
+
+        // 2. Afficher les résultats filles / garçons (2 tableaux basés sur la colonne Sexe)
+        function renderGenderSplitTables() {
+            const course = getActiveCourse();
+            if (!course) return;
+
+            const boys = course.runners.filter(r => r.sexe !== 'F');
+            const girls = course.runners.filter(r => r.sexe === 'F');
+
+            document.getElementById('boysCountBadge').textContent = `${boys.length} coureur${boys.length > 1 ? 's' : ''}`;
+            document.getElementById('girlsCountBadge').textContent = `${girls.length} coureuse${girls.length > 1 ? 's' : ''}`;
+
+            document.getElementById('boysTableBody').innerHTML = boys.map(r => `
+        <tr>
+          <td>${formatRankBadge(r.rangSexe, r.status, r.statusLabel)}</td>
+          <td><span style="color: var(--text-muted); font-weight: 600;">${r.rang ? `#${r.rang}` : '-'}</span></td>
+          <td><span class="dossard-tag">${escapeHtml(r.dossard)}</span></td>
+          <td style="font-weight: 700;">${escapeHtml(r.nom)}</td>
+          <td>${escapeHtml(r.prenom)}</td>
+          <td><span class="classe-tag">${escapeHtml(r.classe)}</span></td>
+          <td style="font-family: 'Chakra Petch', sans-serif; font-weight: 700;">${formatStatusTimeInteractive(r)}</td>
+          <td>${formatStatusSpeedInteractive(r, '#60a5fa')}</td>
+          <td>${escapeHtml(r.allure)}</td>
+        </tr>
+      `).join('');
+
+            document.getElementById('girlsTableBody').innerHTML = girls.map(r => `
+        <tr>
+          <td>${formatRankBadge(r.rangSexe, r.status, r.statusLabel)}</td>
+          <td><span style="color: var(--text-muted); font-weight: 600;">${r.rang ? `#${r.rang}` : '-'}</span></td>
+          <td><span class="dossard-tag">${escapeHtml(r.dossard)}</span></td>
+          <td style="font-weight: 700;">${escapeHtml(r.nom)}</td>
+          <td>${escapeHtml(r.prenom)}</td>
+          <td><span class="classe-tag">${escapeHtml(r.classe)}</span></td>
+          <td style="font-family: 'Chakra Petch', sans-serif; font-weight: 700;">${formatStatusTimeInteractive(r)}</td>
+          <td>${formatStatusSpeedInteractive(r, '#f472b6')}</td>
+          <td>${escapeHtml(r.allure)}</td>
+        </tr>
+      `).join('');
+        }
+
+        // 3. Afficher les résultats par classe
+        function populateClassFilterDropdown() {
+            const course = getActiveCourse();
+            if (!course) return;
+            const classes = Array.from(new Set(course.runners.map(r => r.classe))).sort();
+            const select = document.getElementById('classSelectFilter');
+            select.innerHTML = `<option value="ALL">Toutes les classes (${classes.length})</option>` +
+                classes.map(c => `<option value="${escapeHtml(c)}">Classe ${escapeHtml(c)}</option>`).join('');
+        }
+
+        function renderByClassView() {
+            const course = getActiveCourse();
+            if (!course) return;
+
+            const selectedClass = document.getElementById('classSelectFilter').value;
+            const classesMap = {};
+
+            course.runners.forEach(r => {
+                if (selectedClass !== 'ALL' && r.classe !== selectedClass) return;
+                if (!classesMap[r.classe]) classesMap[r.classe] = [];
+                classesMap[r.classe].push(r);
+            });
+
+            const sortedClassNames = Object.keys(classesMap).sort();
+            const container = document.getElementById('byClassContainer');
+
+            container.innerHTML = sortedClassNames.map(className => {
+                const pupils = classesMap[className];
+                const finishers = pupils.filter(p => p.status === 'FINISHER');
+                const bestFinisher = finishers.length > 0 ? finishers[0] : null;
+                let rankInClassCounter = 0;
+
+                return `
+          <div class="class-group-card">
+            <div class="class-group-header">
+              <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <span class="classe-tag" style="font-size: 1.05rem; padding: 6px 14px;">🏫 Classe ${escapeHtml(className)}</span>
+                <span style="color: var(--text-muted); font-size: 0.9rem;">
+                  ${finishers.length} coureur${finishers.length > 1 ? 's' : ''} avec temps / ${pupils.length} inscrit${pupils.length > 1 ? 's' : ''}
+                </span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+                <div style="font-size: 0.88rem; color: var(--gold); font-weight: 700;">
+                  ${bestFinisher ? `Meilleur classement : #${bestFinisher.rang} (${escapeHtml(bestFinisher.prenom)} ${escapeHtml(bestFinisher.nom)})` : 'Aucun coureur classé'}
+                </div>
+                <button
+                  type="button"
+                  class="btn btn-danger btn-sm"
+                  onclick="deleteClassFromActiveCourse('${escapeHtml(className)}')"
+                  title="Supprimer cette classe du classement"
+                >
+                  🗑️ Supprimer la classe ${escapeHtml(className)}
+                </button>
+              </div>
+            </div>
+            <div class="table-wrapper">
+              <table class="sport-table">
+                <thead>
+                  <tr>
+                    <th>Rang Classe</th>
+                    <th>Rang Général</th>
+                    <th>Dossard</th>
+                    <th>Nom</th>
+                    <th>Prénom</th>
+                    <th>Sexe</th>
+                    <th>Temps / Statut</th>
+                    <th>Vitesse / Action</th>
+                    <th>Impact Score Classe</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${pupils.map(r => {
+                    const pts = getRunnerClassPoints(r);
+                    let ptsHtml = '';
+                    if (r.status === 'FINISHER') {
+                        rankInClassCounter++;
+                        ptsHtml = `<span style="color: var(--gold); font-weight: 700;">+${pts} pts</span>`;
+                    } else if (r.status === 'DNF') {
+                        ptsHtml = `<span style="color: #f87171; font-weight: 700;">${pts} pts (Pénalité non arrivée)</span>`;
+                    } else {
+                        ptsHtml = `<span style="color: var(--text-muted); font-weight: 600;">0 pt (Neutre)</span>`;
+                    }
+                    return `
+                    <tr>
+                      <td>${r.status === 'FINISHER' ? formatRankBadge(rankInClassCounter) : formatRankBadge(null, r.status, r.statusLabel)}</td>
+                      <td><strong>${r.rang ? `#${r.rang}` : '-'}</strong></td>
+                      <td><span class="dossard-tag">${escapeHtml(r.dossard)}</span></td>
+                      <td style="font-weight: 700;">${escapeHtml(r.nom)}</td>
+                      <td>${escapeHtml(r.prenom)}</td>
+                      <td><span class="sexe-badge ${r.sexe === 'F' ? 'sexe-f' : 'sexe-m'}">${r.sexe}</span></td>
+                      <td>${formatStatusTimeInteractive(r)}</td>
+                      <td>${formatStatusSpeedInteractive(r, '#34d399')}</td>
+                      <td>${ptsHtml}</td>
+                    </tr>
+                  `;
+                }).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+            }).join('');
+        }
+
+        // 4. Classement des classes (Score total divisé par le nombre de coureurs avec un temps + gestion des pénalités)
+        function renderClassRankingView() {
+            const course = getActiveCourse();
+            if (!course) return;
+
+            const mode = document.getElementById('classRankingMode').value;
+            const classStats = {};
+
+            course.runners.forEach(r => {
+                if (!classStats[r.classe]) {
+                    classStats[r.classe] = {
+                        classe: r.classe,
+                        rawPoints: 0,
+                        penaltyPoints: 0,
+                        totalPoints: 0,
+                        finishersCount: 0, // Nombre de coureurs avec un temps
+                        dnfCount: 0,       // Nombre de "non arrivée" (pénalité)
+                        excusedCount: 0,   // Nombre d'"absence justifiée" ou "dispensé" (aucune pénalité)
+                        dnfRunners: [],
+                        excusedRunners: [],
+                        totalCount: 0,
+                        top5Count: 0,
+                        bestRank: null,
+                        pupilsDetails: []
+                    };
+                }
+                const st = classStats[r.classe];
+                st.totalCount += 1;
+
+                if (r.status === 'FINISHER') {
+                    const pts = getPointsForRank(r.rang);
+                    st.rawPoints += pts;
+                    st.finishersCount += 1;
+                    if (r.rang <= 5) st.top5Count += 1;
+                    if (st.bestRank === null || r.rang < st.bestRank) st.bestRank = r.rang;
+                    st.pupilsDetails.push(`${r.prenom} ${r.nom} (#${r.rang} → +${pts}pts)`);
+                } else if (r.status === 'DNF') {
+                    st.dnfCount += 1;
+                    st.penaltyPoints += PENALTY_NON_ARRIVEE;
+                    st.dnfRunners.push(r);
+                    st.pupilsDetails.push(`${r.prenom} ${r.nom} (Non arrivée → -${PENALTY_NON_ARRIVEE}pts)`);
+                } else {
+                    st.excusedCount += 1;
+                    st.excusedRunners.push(r);
+                    st.pupilsDetails.push(`${r.prenom} ${r.nom} (${r.statusLabel} → 0 pénalité)`);
+                }
+            });
+
+            const rankingArray = Object.values(classStats).map(st => {
+                // Score total net de la classe (points des arrivés - pénalités des "non arrivée")
+                const netTotal = Math.max(0, st.rawPoints - st.penaltyPoints);
+                // Division du score total obtenu par le nombre de coureurs avec un temps
+                const scorePerFinisher = st.finishersCount > 0 ? (netTotal / st.finishersCount) : 0;
+                return {
+                    ...st,
+                    totalPoints: netTotal,
+                    avgPoints: scorePerFinisher
+                };
+            });
+
+            rankingArray.sort((a, b) => {
+                if (mode === 'AVG') {
+                    if (b.avgPoints !== a.avgPoints) return b.avgPoints - a.avgPoints;
+                }
+                if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+                return (a.bestRank ?? 9999) - (b.bestRank ?? 9999);
+            });
+
+            // Rendu du Podium visuel
+            const podiumContainer = document.getElementById('classesPodium');
+            const top3 = rankingArray.slice(0, 3);
+            const medals = ['🥇 1re Place', '🥈 2e Place', '🥉 3e Place'];
+
+            podiumContainer.innerHTML = top3.map((c, idx) => `
+        <div class="podium-step podium-${idx + 1}">
+          <div style="font-size: 0.85rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">
+            ${medals[idx]}
+          </div>
+          <div style="font-family: 'Chakra Petch', sans-serif; font-size: 2rem; font-weight: 700; color: #fff;">
+            Classe ${escapeHtml(c.classe)}
+          </div>
+          <div style="font-family: 'Chakra Petch', sans-serif; font-size: 1.5rem; font-weight: 700; color: #34d399;">
+            ${c.avgPoints.toFixed(2)} pts / coureur
+          </div>
+          <div style="font-size: 0.84rem; color: var(--text-muted);">
+            Total net : <strong style="color: var(--gold);">${c.totalPoints} pts</strong> ÷ <strong>${c.finishersCount} coureur${c.finishersCount > 1 ? 's' : ''} avec temps</strong>
+            ${c.dnfCount > 0 ? `<br/><span style="color: #f87171;">⚠️ ${c.dnfCount} non arrivée(s) (-${c.penaltyPoints} pts)</span>` : ''}
+            ${c.excusedCount > 0 ? `<br/><span style="color: #94a3b8;">🛡️ ${c.excusedCount} abs. justifiée(s)/disp. (0 pénalité)</span>` : ''}
+          </div>
+        </div>
+      `).join('');
+
+            // Rendu du Tableau avec boutons directs pour basculer un "Non arrivée" en "Dispensé"
+            const tbody = document.getElementById('classRankingTableBody');
+            tbody.innerHTML = rankingArray.map((c, idx) => {
+                const dnfButtonsHtml = c.dnfRunners.length > 0
+                    ? `<div style="display: flex; flex-direction: column; gap: 6px;">
+                        <span class="status-badge-dnf">${c.dnfCount} (−${c.penaltyPoints} pts)</span>
+                        ${c.dnfRunners.map(r => `
+                          <button
+                            type="button"
+                            class="btn-status-toggle"
+                            title="Passer ${escapeHtml(r.prenom)} ${escapeHtml(r.nom)} en Dispensé (annule la pénalité de -${PENALTY_NON_ARRIVEE} pts)"
+                            onclick="changeRunnerAbsenceStatus('${r.id}', 'DISPENSE')"
+                          >
+                            🛡️ ${escapeHtml(r.prenom)} ${escapeHtml(r.nom)} ➔ Dispensé
+                          </button>
+                        `).join('')}
+                       </div>`
+                    : '<span style="color: var(--text-muted);">0 (Aucune pénalité)</span>';
+
+                const excusedButtonsHtml = c.excusedRunners.length > 0
+                    ? `<div style="display: flex; flex-direction: column; gap: 6px;">
+                        <span class="status-badge-excused">${c.excusedCount} (0 pénalité)</span>
+                        ${c.excusedRunners.map(r => `
+                          <button
+                            type="button"
+                            class="btn-status-toggle btn-status-toggle-dnf"
+                            title="Basculer ${escapeHtml(r.prenom)} ${escapeHtml(r.nom)} en Non arrivée (-${PENALTY_NON_ARRIVEE} pts)"
+                            onclick="changeRunnerAbsenceStatus('${r.id}', 'DNF')"
+                          >
+                            ⚠️ ${escapeHtml(r.prenom)} ${escapeHtml(r.nom)} ➔ Non arrivée
+                          </button>
+                        `).join('')}
+                       </div>`
+                    : '<span style="color: var(--text-muted);">0</span>';
+
+                return `
+        <tr>
+          <td>${formatRankBadge(idx + 1)}</td>
+          <td><span class="classe-tag" style="font-size: 1rem;">${escapeHtml(c.classe)}</span></td>
+          <td style="font-family: 'Chakra Petch', sans-serif; font-size: 1.15rem; font-weight: 700; color: #34d399;">
+            ${c.avgPoints.toFixed(2)} pts
+          </td>
+          <td style="font-weight: 700; color: var(--gold);">
+            ${c.totalPoints} pts
+            ${c.penaltyPoints > 0 ? `<span style="font-size: 0.78rem; color: var(--text-muted);">(${c.rawPoints} - ${c.penaltyPoints})</span>` : ''}
+          </td>
+          <td><strong>${c.finishersCount}</strong> coureur${c.finishersCount > 1 ? 's' : ''}</td>
+          <td>${dnfButtonsHtml}</td>
+          <td>${excusedButtonsHtml}</td>
+          <td><strong>${c.bestRank ? `#${c.bestRank}` : '-'}</strong></td>
+          <td style="max-width: 320px; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(c.pupilsDetails.join(' | '))}">
+            <span style="color: var(--text-muted); font-size: 0.82rem;">${escapeHtml(c.pupilsDetails.slice(0, 3).join(', '))}${c.pupilsDetails.length > 3 ? '...' : ''}</span>
+          </td>
+          <td>
+            <button
+              type="button"
+              class="btn btn-danger btn-sm"
+              onclick="deleteClassFromActiveCourse('${escapeHtml(c.classe)}')"
+              title="Supprimer la classe ${escapeHtml(c.classe)}"
+            >
+              🗑️ Supprimer
+            </button>
+          </td>
+        </tr>
+      `;
+            }).join('');
+        }
+
+        // Normalise une classe ("4ème B", "4e B", "4 B", "4B" -> "4b")
+        function normalizeClasse(str) {
+            if (!str) return '';
+            return String(str)
+                .trim()
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/\b(classe|division|div)\b/g, '')
+                .replace(/([0-9])(eme|ere|e)\b/g, '$1')
+                .replace(/[^a-z0-9]/g, '');
+        }
+
+        // Extrait les lignes sous forme de tableau 2D depuis un fichier Excel (.xlsx/.xls) ou CSV (.csv)
+        function extract2DRowsFromBuffer(arrayBuffer, fileName) {
+            const isCsv = /\.csv$/i.test(fileName || '');
+            if (isCsv) {
+                let text = new TextDecoder('utf-8').decode(arrayBuffer);
+                if (text.includes('\uFFFD')) {
+                    text = new TextDecoder('windows-1252').decode(arrayBuffer);
+                }
+                const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+                return lines.map(line => {
+                    // Détecte le séparateur (point-virgule, tabulation ou virgule)
+                    if (line.includes(';')) {
+                        return line.split(';').map(c => c.replace(/^["']|["']$/g, '').trim());
+                    }
+                    if (line.includes('\t')) {
+                        return line.split('\t').map(c => c.replace(/^["']|["']$/g, '').trim());
+                    }
+                    return line.split(',').map(c => c.replace(/^["']|["']$/g, '').trim());
+                });
+            }
+
+            const data = new Uint8Array(arrayBuffer);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const raw2D = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+
+            // Si un CSV ouvert via SheetJS a été lu dans une seule colonne avec des ';', on le découpe
+            return raw2D.map(row => {
+                if (row.length === 1 && typeof row[0] === 'string' && row[0].includes(';')) {
+                    return row[0].split(';').map(c => c.trim());
+                }
+                return row;
+            });
+        }
+
+        // 5. Création des notes (Import VMA 3 ou 4 colonnes Excel/CSV + Algorithme scientifique & bienveillant)
+        function handleVmaFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const course = getActiveCourse();
+            if (!course) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const rows2D = extract2DRowsFromBuffer(e.target.result, file.name)
+                        .map(row => {
+                            const cleaned = row.map(c => String(c ?? '').trim());
+                            while (cleaned.length > 0 && cleaned[cleaned.length - 1] === '') {
+                                cleaned.pop();
+                            }
+                            return cleaned;
+                        })
+                        .filter(row => row.some(cell => cell !== ''));
+
+                    if (rows2D.length === 0) {
+                        alert("Le fichier VMA sélectionné est vide.");
+                        return;
+                    }
+
+                    // Vérifie si la 1re ligne est une ligne d'en-tête
+                    const firstRow = rows2D[0];
+                    const firstRowNorm = firstRow.map(normalizeText);
+                    const hasHeaderKeywords = firstRowNorm.some(h =>
+                        h.includes('nom') || h.includes('prenom') || h.includes('eleve') || h.includes('vma') || h.includes('classe')
+                    );
+                    const lastCellOfFirstRowSpeed = parseSpeedNumber(firstRow[firstRow.length - 1]);
+                    const isFirstRowHeader = hasHeaderKeywords || isNaN(lastCellOfFirstRowSpeed);
+
+                    // Repérage éventuel des colonnes par en-tête si présentes
+                    let headerMap = null;
+                    if (isFirstRowHeader) {
+                        let colNomPrenom = -1;
+                        let colNom = -1;
+                        let colPrenom = -1;
+                        let colClasse = -1;
+                        let colVma = -1;
+
+                        firstRowNorm.forEach((h, idx) => {
+                            if ((h.includes('nom') && h.includes('prenom')) || h.includes('eleve')) {
+                                colNomPrenom = idx;
+                            } else if (h === 'nom' || h.startsWith('nom') || h.includes('lastname')) {
+                                if (colNom === -1) colNom = idx;
+                            } else if (h.includes('prenom') || h.includes('firstname')) {
+                                if (colPrenom === -1) colPrenom = idx;
+                            } else if (h.includes('classe') || h.includes('div')) {
+                                if (colClasse === -1) colClasse = idx;
+                            } else if (h.includes('vma') || h.includes('vitesse')) {
+                                if (colVma === -1) colVma = idx;
+                            }
+                        });
+
+                        if (colVma !== -1 && (colNomPrenom !== -1 || colNom !== -1)) {
+                            headerMap = { colNomPrenom, colNom, colPrenom, colClasse, colVma };
+                        }
+                    }
+
+                    const dataRows = isFirstRowHeader ? rows2D.slice(1) : rows2D;
+                    let matchedCount = 0;
+
+                    dataRows.forEach(cells => {
+                        if (cells.length < 2) return;
+
+                        let nom = '';
+                        let prenom = '';
+                        let nomPrenomCombined = '';
+                        let classe = '';
+                        let vmaVal = NaN;
+
+                        if (headerMap) {
+                            vmaVal = parseSpeedNumber(cells[headerMap.colVma]);
+                            if (headerMap.colClasse !== -1) classe = cells[headerMap.colClasse] || '';
+                            if (headerMap.colNom !== -1 && headerMap.colPrenom !== -1) {
+                                nom = cells[headerMap.colNom] || '';
+                                prenom = cells[headerMap.colPrenom] || '';
+                            } else if (headerMap.colNomPrenom !== -1) {
+                                nomPrenomCombined = cells[headerMap.colNomPrenom] || '';
+                            } else if (headerMap.colNom !== -1) {
+                                nomPrenomCombined = cells[headerMap.colNom] || '';
+                            }
+                        }
+
+                        // Si pas d'en-tête standard ou VMA non trouvée via l'en-tête, détection par position :
+                        // Cas 1 (3 colonnes) : Col 1 = Nom et Prénom, Col 2 = Classe, Col 3 = VMA
+                        // Cas 2 (4 colonnes) : Col 1 = Nom, Col 2 = Prénom, Col 3 = Classe, Col 4 = VMA
+                        if (isNaN(vmaVal) || vmaVal <= 0) {
+                            if (cells.length === 3) {
+                                nomPrenomCombined = cells[0];
+                                classe = cells[1];
+                                vmaVal = parseSpeedNumber(cells[2]);
+                            } else if (cells.length >= 4) {
+                                nom = cells[0];
+                                prenom = cells[1];
+                                classe = cells[2];
+                                vmaVal = parseSpeedNumber(cells[3]);
+                                // Si la 4e colonne n'est pas la VMA (ex: présence d'une colonne Sexe), cherche la VMA dans la dernière colonne
+                                if (isNaN(vmaVal) || vmaVal <= 0) {
+                                    vmaVal = parseSpeedNumber(cells[cells.length - 1]);
+                                }
+                            } else if (cells.length === 2) {
+                                nomPrenomCombined = cells[0];
+                                vmaVal = parseSpeedNumber(cells[1]);
+                            }
+                        }
+
+                        if (isNaN(vmaVal) || vmaVal <= 0) return;
+
+                        const normNom = normalizeText(nom);
+                        const normPrenom = normalizeText(prenom);
+                        const normCombined = normalizeText(nomPrenomCombined);
+                        const normClasse = normalizeClasse(classe);
+                        const combinedTokens = String(nomPrenomCombined || `${nom} ${prenom}`)
+                            .trim()
+                            .split(/[\s,;/-]+/)
+                            .map(normalizeText)
+                            .filter(Boolean);
+
+                        // Recherche des candidats correspondants par Nom & Prénom
+                        const candidates = course.runners.filter(runner => {
+                            const rNom = normalizeText(runner.nom);
+                            const rPrenom = normalizeText(runner.prenom);
+                            const rFull1 = rNom + rPrenom;
+                            const rFull2 = rPrenom + rNom;
+
+                            // Si format 4 colonnes (Nom et Prénom séparés)
+                            if (normNom && normPrenom) {
+                                if ((rNom === normNom && rPrenom === normPrenom) ||
+                                    (rNom === normPrenom && rPrenom === normNom) ||
+                                    rFull1 === normNom + normPrenom ||
+                                    rFull2 === normNom + normPrenom) {
+                                    return true;
+                                }
+                            }
+
+                            // Si format 3 colonnes (Nom et Prénom dans la colonne 1)
+                            if (normCombined) {
+                                if (normCombined === rFull1 || normCombined === rFull2) {
+                                    return true;
+                                }
+                                if (rNom && rPrenom && combinedTokens.includes(rNom) && combinedTokens.includes(rPrenom)) {
+                                    return true;
+                                }
+                                if (rNom.length >= 2 && rPrenom.length >= 2 && normCombined.includes(rNom) && normCombined.includes(rPrenom)) {
+                                    return true;
+                                }
+                            }
+
+                            return false;
+                        });
+
+                        if (candidates.length === 1) {
+                            candidates[0].vma = vmaVal;
+                            matchedCount++;
+                        } else if (candidates.length > 1) {
+                            // S'il y a des homonymes, on départage grâce à la colonne Classe
+                            const exactClassMatches = normClasse
+                                ? candidates.filter(c => normalizeClasse(c.classe) === normClasse)
+                                : [];
+                            const targets = exactClassMatches.length > 0 ? exactClassMatches : candidates;
+                            targets.forEach(t => {
+                                t.vma = vmaVal;
+                                matchedCount++;
+                            });
+                        } else if (normClasse) {
+                            // Secours : si même classe et correspondance exacte sur le Nom de famille unique dans la classe
+                            const fallbackByClassAndLastName = course.runners.filter(runner => {
+                                if (normalizeClasse(runner.classe) !== normClasse) return false;
+                                const rNom = normalizeText(runner.nom);
+                                return (normNom && rNom === normNom) || (combinedTokens.length > 0 && combinedTokens.includes(rNom));
+                            });
+                            if (fallbackByClassAndLastName.length === 1) {
+                                fallbackByClassAndLastName[0].vma = vmaVal;
+                                matchedCount++;
+                            }
+                        }
+                    });
+
+                    const summaryEl = document.getElementById('vmaMatchSummary');
+                    summaryEl.style.background = 'rgba(16, 185, 129, 0.18)';
+                    summaryEl.style.border = '1px solid rgba(16, 185, 129, 0.5)';
+                    summaryEl.style.color = '#34d399';
+                    summaryEl.style.padding = '12px 16px';
+                    summaryEl.style.borderRadius = '10px';
+                    summaryEl.innerHTML =
+                        `✅ <strong>Fichier importé avec succès !</strong> (${escapeHtml(file.name)}) — <strong>${matchedCount} élève(s)</strong> détecté(s) (Nom, Prénom, Classe) et noté(s) automatiquement selon le barème !`;
+
+                    saveStateToLocalStorage();
+                    renderGradesView();
+                    event.target.value = '';
+                } catch (err) {
+                    console.error(err);
+                    alert("Erreur lors de l'import du fichier VMA : " + err.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function updateManualVma(runnerId, value) {
+            const course = getActiveCourse();
+            if (!course) return;
+            const runner = course.runners.find(r => r.id === runnerId);
+            if (!runner) return;
+            const num = parseSpeedNumber(value);
+            runner.vma = (!isNaN(num) && num > 0) ? num : null;
+            saveStateToLocalStorage();
+            renderGradesView();
+        }
+
+        function renderGradesView() {
+            const course = getActiveCourse();
+            if (!course) return;
+
+            const tbody = document.getElementById('gradesTableBody');
+            tbody.innerHTML = course.runners.map(r => {
+                const gradeObj = computeStudentGrade(r);
+                const pctDisplay = gradeObj.pctVma !== null
+                    ? `<strong>${gradeObj.pctVma.toFixed(1)}%</strong>`
+                    : '<span style="color: var(--text-muted);">-</span>';
+
+                let noteDisplay = '';
+                if (typeof gradeObj.note === 'number') {
+                    noteDisplay = `<span class="note-badge ${gradeObj.badgeClass}">${gradeObj.note} / 20</span>`;
+                } else if (typeof gradeObj.note === 'string') {
+                    noteDisplay = `<span class="status-badge-excused">${escapeHtml(gradeObj.note)}</span>`;
+                } else {
+                    noteDisplay = `<span style="color: var(--text-muted); font-size: 0.85rem;">Saisir VMA</span>`;
+                }
+
+                const isPodium = r.status === 'FINISHER' && r.rangSexe !== null && r.rangSexe <= 3;
+                const rangSexeHtml = r.status === 'FINISHER' && r.rangSexe !== null
+                    ? `<span class="sexe-badge ${r.sexe === 'F' ? 'sexe-f' : 'sexe-m'}">
+                        ${r.rangSexe}${r.rangSexe === 1 ? 'er' : 'e'} ${r.sexe} ${isPodium ? '🏆' : ''}
+                       </span>`
+                    : `<span style="color: var(--text-muted);">-</span>`;
+
+                return `
+          <tr>
+            <td>${formatRankBadge(r.rang, r.status, r.statusLabel)}</td>
+            <td>${rangSexeHtml}</td>
+            <td style="font-weight: 700;">${escapeHtml(r.nom)}</td>
+            <td>${escapeHtml(r.prenom)}</td>
+            <td>${r.sexe}</td>
+            <td><span class="classe-tag">${escapeHtml(r.classe)}</span></td>
+            <td>${r.status === 'FINISHER' ? `<span style="color: #34d399; font-weight: 700;">${escapeHtml(r.vitesseDisplay)}</span>` : formatStatusTimeInteractive(r)}</td>
+            <td>
+              <input
+                type="number"
+                step="0.5"
+                min="6"
+                max="24"
+                class="vma-input-inline"
+                placeholder="Ex: 14"
+                value="${r.vma !== null ? r.vma : ''}"
+                onchange="updateManualVma('${r.id}', this.value)"
+              />
+            </td>
+            <td>${pctDisplay}</td>
+            <td style="font-size: 0.85rem;">${gradeObj.label}</td>
+            <td>${noteDisplay}</td>
+          </tr>
+        `;
+            }).join('');
+        }
+
+        // ============================================================================
+        // DONNÉES DE DÉMONSTRATION & TÉLÉCHARGEMENT DE MODÈLES EXCEL
+        // ============================================================================
+        function getSampleRunnersData() {
+            // Inclut la 1re ligne exacte de la capture d'écran (Blabla Jule, M, 4B, Minimes, 08:04.3, 17,1 km/h, 3'31") + coureurs classés + cas "Non arrivée", "Absence justifiée" et "Dispensé"
+            return [
+                { Rang: 1, Dossard: 301, Nom: "Blabla", "Prénom": "Jule", Sexe: "M", Classe: "4B", "Catégorie": "Minimes", "Établissement": "Collège Jean Moulin", Temps: "08:04.3", Vitesse: "17,1 km/h", Allure: "3'31\"", vmaDemo: 17.0 },
+                { Rang: 2, Dossard: 314, Nom: "Martin", "Prénom": "Lucas", Sexe: "M", Classe: "4A", "Catégorie": "Minimes", "Établissement": "Collège Jean Moulin", Temps: "08:12.1", Vitesse: "16,8 km/h", Allure: "3'34\"", vmaDemo: 16.5 },
+                { Rang: 3, Dossard: 322, Nom: "Dupont", "Prénom": "Chloé", Sexe: "F", Classe: "4B", "Catégorie": "Minimes", "Établissement": "Collège Jean Moulin", Temps: "08:25.0", Vitesse: "16,4 km/h", Allure: "3'39\"", vmaDemo: 15.5 },
+                { Rang: 4, Dossard: 308, Nom: "Bernard", "Prénom": "Yanis", Sexe: "M", Classe: "4C", "Catégorie": "Minimes", "Établissement": "Collège Jean Moulin", Temps: "08:31.4", Vitesse: "16,2 km/h", Allure: "3'42\"", vmaDemo: 16.0 },
+                { Rang: 5, Dossard: 319, Nom: "Petit", "Prénom": "Emma", Sexe: "F", Classe: "4A", "Catégorie": "Minimes", "Établissement": "Collège Jean Moulin", Temps: "08:39.8", Vitesse: "15,9 km/h", Allure: "3'46\"", vmaDemo: 15.0 },
+                { Rang: 6, Dossard: 305, Nom: "Robert", "Prénom": "Noah", Sexe: "M", Classe: "4B", "Catégorie": "Minimes", "Établissement": "Collège Jean Moulin", Temps: "08:48.2", Vitesse: "15,7 km/h", Allure: "3'49\"", vmaDemo: 16.0 },
+                { Rang: 7, Dossard: 331, Nom: "Richard", "Prénom": "Léa", Sexe: "F", Classe: "4D", "Catégorie": "Minimes", "Établissement": "Collège Jean Moulin", Temps: "08:55.0", Vitesse: "15,5 km/h", Allure: "3'52\"", vmaDemo: 14.5 },
+                { Rang: 8, Dossard: 312, Nom: "Durand", "Prénom": "Hugo", Sexe: "M", Classe: "4A", "Catégorie": "Minimes", "Établissement": "Collège Jean Moulin", Temps: "09:02.6", Vitesse: "15,3 km/h", Allure: "3'55\"", vmaDemo: 15.5 },
+                { Rang: 9, Dossard: 327, Nom: "Moreau", "Prénom": "Inès", Sexe: "F", Classe: "4B", "Catégorie": "Minimes", "Établissement": "Collège Jean Moulin", Temps: "09:10.4", Vitesse: "15,0 km/h", Allure: "4'00\"", vmaDemo: 14.5 },
+                { Rang: 10, Dossard: 340, Nom: "Simon", "Prénom": "Arthur", Sexe: "M", Classe: "4C", "Catégorie": "Minimes", "Établissement": "Collège Jean Moulin", Temps: "09:18.9", Vitesse: "14,8 km/h", Allure: "4'03\"", vmaDemo: 15.5 },
+                { Rang: 11, Dossard: 315, Nom: "Laurent", "Prénom": "Manon", Sexe: "F", Classe: "4A", "Catégorie": "Minimes", "Établissement": "Collège Jean Moulin", Temps: "09:26.1", Vitesse: "14,6 km/h", Allure: "4'06\"", vmaDemo: 14.0 },
+                { Rang: 12, Dossard: 303, Nom: "Lefebvre", "Prénom": "Enzo", Sexe: "M", Classe: "4D", "Catégorie": "Minimes", "Établissement": "Collège Jean Moulin", Temps: "09:34.5", Vitesse: "14,4 km/h", Allure: "4'10\"", vmaDemo: 15.0 },
+                { Rang: 13, Dossard: 329, Nom: "Michel", "Prénom": "Camille", Sexe: "F", Classe: "4C", "Catégorie": "Minimes", "Établissement": "Collège Jean Moulin", Temps: "09:42.0", Vitesse: "14,2 km/h", Allure: "4'13\"", vmaDemo: 14.0 },
+                { Rang: 14, Dossard: 318, Nom: "Garcia", "Prénom": "Tom", Sexe: "M", Classe: "4B", "Catégorie": "Minimes", "Établissement": "Collège Jean Moulin", Temps: "09:50.2", Vitesse: "14,0 km/h", Allure: "4'17\"", vmaDemo: 14.5 },
+                { Rang: 15, Dossard: 334, Nom: "David", "Prénom": "Sarah", Sexe: "F", Classe: "4D", "Catégorie": "Minimes", "Établissement": "Collège Jean Moulin", Temps: "09:58.7", Vitesse: "13,8 km/h", Allure: "4'20\"", vmaDemo: 13.5 },
+                { Rang: 16, Dossard: 309, Nom: "Bertrand", "Prénom": "Louis", Sexe: "M", Classe: "4A", "Catégorie": "Minimes", "Établissement": "Collège Jean Moulin", Temps: "10:06.3", Vitesse: "13,6 km/h", Allure: "4'24\"", vmaDemo: 15.0 },
+                { Rang: 17, Dossard: 321, Nom: "Roux", "Prénom": "Jade", Sexe: "F", Classe: "4B", "Catégorie": "Minimes", "Établissement": "Collège Jean Moulin", Temps: "10:15.0", Vitesse: "13,4 km/h", Allure: "4'28\"", vmaDemo: 13.5 },
+                { Rang: 18, Dossard: 336, Nom: "Vincent", "Prénom": "Mathis", Sexe: "M", Classe: "4C", "Catégorie": "Minimes", "Établissement": "Collège Jean Moulin", Temps: "10:24.4", Vitesse: "13,2 km/h", Allure: "4'32\"", vmaDemo: 14.5 },
+                { Rang: 19, Dossard: 311, Nom: "Fournier", "Prénom": "Zoé", Sexe: "F", Classe: "4A", "Catégorie": "Minimes", "Établissement": "Collège Jean Moulin", Temps: "10:33.1", Vitesse: "13,0 km/h", Allure: "4'36\"", vmaDemo: 13.0 },
+                { Rang: 20, Dossard: 325, Nom: "Morel", "Prénom": "Nathan", Sexe: "M", Classe: "4D", "Catégorie": "Minimes", "Établissement": "Collège Jean Moulin", Temps: "10:42.8", Vitesse: "12,8 km/h", Allure: "4'41\"", vmaDemo: 14.0 },
+                { Rang: 21, Dossard: 338, Nom: "Girard", "Prénom": "Lola", Sexe: "F", Classe: "4C", "Catégorie": "Minimes", "Établissement": "Collège Jean Moulin", Temps: "10:52.0", Vitesse: "12,6 km/h", Allure: "4'45\"", vmaDemo: 13.0 },
+                { Rang: 22, Dossard: 304, Nom: "Andre", "Prénom": "Gabriel", Sexe: "M", Classe: "4B", "Catégorie": "Minimes", "Établissement": "Collège Jean Moulin", Temps: "11:04.5", Vitesse: "12,4 km/h", Allure: "4'50\"", vmaDemo: 14.0 },
+                { Rang: 23, Dossard: 317, Nom: "Lefevre", "Prénom": "Clara", Sexe: "F", Classe: "4D", "Catégorie": "Minimes", "Établissement": "Collège Jean Moulin", Temps: "11:16.2", Vitesse: "12,1 km/h", Allure: "4'57\"", vmaDemo: 12.5 },
+                { Rang: 24, Dossard: 330, Nom: "Mercier", "Prénom": "Raphaël", Sexe: "M", Classe: "4A", "Catégorie": "Minimes", "Établissement": "Collège Jean Moulin", Temps: "11:28.9", Vitesse: "11,9 km/h", Allure: "5'02\"", vmaDemo: 13.5 },
+                { Rang: 25, Dossard: 306, Nom: "Dupuis", "Prénom": "Eva", Sexe: "F", Classe: "4C", "Catégorie": "Minimes", "Établissement": "Collège Jean Moulin", Temps: "11:40.0", Vitesse: "11,7 km/h", Allure: "5'07\"", vmaDemo: 12.0 },
+                { Rang: "-", Dossard: 341, Nom: "Lambert", "Prénom": "Maxime", Sexe: "M", Classe: "4C", "Catégorie": "Minimes", "Établissement": "Collège Jean Moulin", Temps: "Non arrivée", Vitesse: "Non arrivée", Allure: "-", vmaDemo: 13.0 },
+                { Rang: "-", Dossard: 342, Nom: "Bonnet", "Prénom": "Lina", Sexe: "F", Classe: "4B", "Catégorie": "Minimes", "Établissement": "Collège Jean Moulin", Temps: "Absence justifiée", Vitesse: "Absence justifiée", Allure: "-", vmaDemo: 13.5 },
+                { Rang: "-", Dossard: 343, Nom: "Francois", "Prénom": "Milan", Sexe: "M", Classe: "4A", "Catégorie": "Minimes", "Établissement": "Collège Jean Moulin", Temps: "Dispensé", Vitesse: "Dispensé", Allure: "-", vmaDemo: 14.0 },
+                { Rang: "-", Dossard: 344, Nom: "Martinez", "Prénom": "Sacha", Sexe: "M", Classe: "4D", "Catégorie": "Minimes", "Établissement": "Collège Jean Moulin", Temps: "Non arrivée", Vitesse: "Non arrivée", Allure: "-", vmaDemo: 13.5 }
+            ];
+        }
+
+        function loadDemoCrossDataset() {
+            const sampleRows = getSampleRunnersData();
+            const runners = parseRunnersFromRawRows(sampleRows);
+            addImportedCourse("Classement_Cross_Minimes_4e.xlsx", runners);
+        }
+
+        function loadDemoVmaForActiveCourse() {
+            const course = getActiveCourse();
+            if (!course) return;
+            const sampleMap = {};
+            getSampleRunnersData().forEach(s => {
+                sampleMap[normalizeText(s.Nom) + '_' + normalizeText(s["Prénom"])] = s.vmaDemo;
+            });
+
+            course.runners.forEach(r => {
+                const key = normalizeText(r.nom) + '_' + normalizeText(r.prenom);
+                if (sampleMap[key]) {
+                    r.vma = sampleMap[key];
+                } else if (r.vitesseNum) {
+                    // Génère une VMA réaliste autour de la vitesse de course (entre 100% et 115% de la vitesse du cross)
+                    r.vma = Math.round((r.vitesseNum * 1.08) * 2) / 2;
+                } else {
+                    r.vma = 13.5;
+                }
+            });
+
+            document.getElementById('vmaMatchSummary').innerHTML =
+                `✅ VMA de démonstration appliquées aux <strong>${course.runners.length} élèves</strong> ! Vous pouvez modifier n'importe quelle valeur dans le tableau.`;
+            saveStateToLocalStorage();
+            renderGradesView();
+        }
+
+        function downloadSampleCrossExcel() {
+            const rows = getSampleRunnersData().map(({ vmaDemo, ...rest }) => rest);
+            const ws = XLSX.utils.json_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Classement Cross");
+            XLSX.writeFile(wb, "Modele_Classement_Cross.xlsx");
+        }
+
+        function downloadSampleVmaExcel() {
+            const rows = getSampleRunnersData().map(r => ({
+                Nom: r.Nom,
+                "Prénom": r["Prénom"],
+                Classe: r.Classe,
+                VMA: r.vmaDemo
+            }));
+            const ws = XLSX.utils.json_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "VMA Eleves");
+            XLSX.writeFile(wb, "Modele_VMA_Eleves.xlsx");
+        }
+
+        function exportCurrentGeneralToExcel() {
+            const course = getActiveCourse();
+            if (!course) return;
+            const rows = course.runners.map(r => ({
+                Rang: r.rang,
+                Dossard: r.dossard,
+                Nom: r.nom,
+                "Prénom": r.prenom,
+                Sexe: r.sexe,
+                Classe: r.classe,
+                "Catégorie": r.categorie,
+                "Établissement": r.etablissement,
+                Temps: r.temps,
+                Vitesse: r.vitesseDisplay,
+                Allure: r.allure
+            }));
+            const ws = XLSX.utils.json_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Resultats Cross");
+            XLSX.writeFile(wb, "Export_" + course.fileName);
+        }
+
+        function exportGradesToExcel() {
+            const course = getActiveCourse();
+            if (!course) return;
+            const rows = course.runners.map(r => {
+                const g = computeStudentGrade(r);
+                return {
+                    "Rang Général": r.rang,
+                    "Rang par Sexe": r.rangSexe,
+                    Nom: r.nom,
+                    "Prénom": r.prenom,
+                    Sexe: r.sexe,
+                    Classe: r.classe,
+                    "Vitesse Cross (km/h)": r.vitesseNum ?? r.vitesseDisplay,
+                    "VMA (km/h)": r.vma ?? '',
+                    "% VMA Soutenu": g.pctVma !== null ? Number(g.pctVma.toFixed(1)) : '',
+                    "Note EPS / 20": g.note ?? '',
+                    "Détail Évaluation": g.label
+                };
+            });
+            const ws = XLSX.utils.json_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Notes Cross VMA");
+            XLSX.writeFile(wb, "Notes_EPS_Cross_" + course.fileName);
+        }
+
+        // Restauration automatique des données au chargement / rafraîchissement de la page
+        window.addEventListener('DOMContentLoaded', () => {
+            loadStateFromLocalStorage();
+            renderImportedFilesButtons();
+            if (appState.activeFileId && getActiveCourse()) {
+                openCourseDashboard(appState.activeFileId, appState.activeTab || 1);
+            }
+        });
+    </script>
+</body>
+
+</html>
