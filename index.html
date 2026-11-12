@@ -13,6 +13,9 @@
         rel="stylesheet">
     <!-- Librairie SheetJS pour lire et exporter les fichiers Excel (.xlsx, .xls, .csv) -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Librairies html2canvas & jsPDF pour générer le PDF du podium des classes -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
     <style>
         :root {
@@ -1253,6 +1256,10 @@
                             <option value="AVG">Score Pondéré : Score Total ÷ Coureurs avec un temps (Officiel)</option>
                             <option value="TOTAL">Score Total Net de la classe (Points - Pénalités)</option>
                         </select>
+                        <button type="button" class="btn btn-primary btn-sm" id="exportPodiumPdfBtn"
+                            onclick="exportClassPodiumToPdf()">
+                            📄 Exporter le podium (PDF)
+                        </button>
                     </div>
                 </div>
 
@@ -2456,6 +2463,130 @@
         </tr>
       `;
             }).join('');
+        }
+
+        // Génère un fichier PDF au format A4 Paysage affichant le podium des classes tel qu'il apparaît dans l'application
+        async function exportClassPodiumToPdf() {
+            const course = getActiveCourse();
+            if (!course) return;
+
+            const podiumSource = document.getElementById('classesPodium');
+            if (!podiumSource || podiumSource.children.length === 0) {
+                alert("Aucune classe à afficher sur le podium.");
+                return;
+            }
+
+            const btn = document.getElementById('exportPodiumPdfBtn');
+            const originalBtnHtml = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '⏳ Génération du PDF...';
+            }
+
+            // Conteneur hors-écran aux proportions exactes A4 Paysage (297mm × 210mm -> 1122px × 794px)
+            const pdfContainer = document.createElement('div');
+            pdfContainer.style.cssText = `
+                position: fixed;
+                left: -9999px;
+                top: 0;
+                width: 1122px;
+                height: 794px;
+                background-color: #0f172a;
+                background-image:
+                    radial-gradient(circle at 10% 15%, rgba(16, 185, 129, 0.14) 0%, transparent 45%),
+                    radial-gradient(circle at 90% 85%, rgba(255, 87, 34, 0.14) 0%, transparent 45%);
+                color: #f8fafc;
+                font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                box-sizing: border-box;
+                overflow: hidden;
+            `;
+
+            const modeSelect = document.getElementById('classRankingMode');
+            const modeLabel = modeSelect && modeSelect.options[modeSelect.selectedIndex]
+                ? modeSelect.options[modeSelect.selectedIndex].text
+                : '';
+
+            pdfContainer.innerHTML = `
+                <div>
+                    <div class="track-top-bar" style="height: 10px;"></div>
+                    <div style="padding: 36px 48px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                        <div style="display: flex; align-items: center; gap: 16px;">
+                            <div class="brand-icon" style="transform: none;">🏆</div>
+                            <div>
+                                <div style="font-family: 'Chakra Petch', sans-serif; font-size: 2rem; font-weight: 700; font-style: italic; text-transform: uppercase; color: #ffffff; letter-spacing: 0.5px;">
+                                    Podium du Classement des Classes
+                                </div>
+                                <div class="brand-subtitle" style="font-size: 0.9rem; margin-top: 2px;">
+                                    Cross Scolaire • ${escapeHtml(course.fileName)}
+                                </div>
+                            </div>
+                        </div>
+                        <div style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); padding: 10px 18px; border-radius: 999px; font-size: 0.85rem; color: #cbd5e1; font-weight: 600;">
+                            ${escapeHtml(modeLabel)}
+                        </div>
+                    </div>
+                </div>
+                <div id="pdfPodiumMount" style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 20px 48px;"></div>
+                <div style="padding: 18px 48px; border-top: 1px solid rgba(255, 255, 255, 0.1); display: flex; justify-content: space-between; align-items: center; color: #94a3b8; font-size: 0.85rem;">
+                    <span>🏃‍♂️ <strong>Classement Cross Scolaire</strong> — Podium Officiel des Classes</span>
+                    <span>Édité le ${new Date().toLocaleDateString('fr-FR')}</span>
+                </div>
+            `;
+
+            // Clone du podium exactement tel qu'il apparaît dans l'application
+            const clonedPodium = podiumSource.cloneNode(true);
+            clonedPodium.removeAttribute('id');
+            clonedPodium.style.width = '100%';
+            clonedPodium.style.margin = '0';
+            clonedPodium.style.gap = '28px';
+            clonedPodium.style.flexWrap = 'nowrap';
+            clonedPodium.style.transform = 'scale(1.12)';
+            clonedPodium.style.transformOrigin = 'center center';
+
+            pdfContainer.querySelector('#pdfPodiumMount').appendChild(clonedPodium);
+            document.body.appendChild(pdfContainer);
+
+            try {
+                if (typeof html2canvas === 'undefined' || typeof window.jspdf === 'undefined') {
+                    throw new Error("Les librairies de génération PDF (html2canvas / jsPDF) ne sont pas chargées.");
+                }
+
+                const canvas = await html2canvas(pdfContainer, {
+                    scale: 2,
+                    backgroundColor: '#0f172a',
+                    useCORS: true,
+                    logging: false
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({
+                    orientation: 'landscape',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                const pageWidth = pdf.internal.pageSize.getWidth();   // 297 mm
+                const pageHeight = pdf.internal.pageSize.getHeight(); // 210 mm
+                pdf.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight);
+
+                const cleanCourseName = course.fileName.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_');
+                pdf.save(`Podium_Classes_${cleanCourseName}.pdf`);
+            } catch (err) {
+                console.error(err);
+                alert("Erreur lors de la génération du PDF : " + err.message);
+            } finally {
+                if (pdfContainer.parentNode) {
+                    pdfContainer.parentNode.removeChild(pdfContainer);
+                }
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalBtnHtml;
+                }
+            }
         }
 
         // Normalise une classe ("4ème B", "4e B", "4 B", "4B" -> "4b")
